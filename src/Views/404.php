@@ -8,7 +8,7 @@ require __DIR__ . '/layout/header.php';
     <!-- Contenido 404 (Izquierda) -->
     <div class="lg:col-span-2 flex items-center justify-center min-h-[50vh]">
         <div class="text-center space-y-6 max-w-md">
-            <span class="text-8xl font-black bg-gradient-to-tr from-brand-600 to-indigo-600 bg-clip-text text-transparent block select-none">
+            <span class="text-8xl font-black bg-gradient-to-tr from-brand-600 to-secondary-600 bg-clip-text text-transparent block select-none">
                 404
             </span>
             <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-slate-100">

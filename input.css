@@ -16,11 +16,11 @@
   }
   
   .glass-navbar {
-    @apply bg-white/75 backdrop-blur-lg border-b border-slate-200/50 dark:bg-slate-950/75 dark:border-slate-900/50;
+    @apply bg-siteheader/75 backdrop-blur-lg border-b border-slate-200/50 dark:border-slate-900/50;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 shadow-md shadow-brand-500/10 hover:shadow-lg hover:shadow-brand-500/20 active:scale-95 transition-all duration-200;
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-brand-600 to-secondary-600 hover:from-brand-700 hover:to-secondary-700 shadow-md shadow-brand-500/10 hover:shadow-lg hover:shadow-brand-500/20 active:scale-95 transition-all duration-200;
   }
   
   .btn-secondary {

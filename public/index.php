@@ -73,6 +73,10 @@ try {
             $admin->dashboard();
             break;
             
+        case 'admin/settings':
+            $admin->settings();
+            break;
+            
         case 'admin/posts':
             $admin->posts();
             break;

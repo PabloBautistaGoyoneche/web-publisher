@@ -57,7 +57,7 @@ require __DIR__ . '/layout/header.php';
 
         <!-- Caja de Autor (WordPress Author Box) -->
         <div class="glass-card rounded-3xl p-6 border border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold uppercase shadow-md shadow-brand-500/10 flex-shrink-0">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-secondary-600 flex items-center justify-center text-white text-2xl font-bold uppercase shadow-md shadow-brand-500/10 flex-shrink-0">
                 <?php echo substr($post->getAuthor()->display_name, 0, 1); ?>
             </div>
             <div class="space-y-2 text-center sm:text-left">

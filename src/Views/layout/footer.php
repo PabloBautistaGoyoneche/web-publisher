@@ -4,42 +4,40 @@ use App\Helpers;
     </main>
 
     <!-- Footer Moderno -->
-    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200/50 dark:border-slate-800/50 py-12 transition-colors duration-300">
+    <footer class="bg-sitefooter border-t border-slate-200/50 dark:border-slate-800/50 py-12 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                 
                 <!-- Info del Blog -->
                 <div class="md:col-span-2 space-y-4">
                     <div class="flex items-center gap-2">
-                        <span class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-brand-500/10">
-                            M
-                        </span>
-                        <span class="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">
-                            Modern<span class="text-brand-600 dark:text-brand-400">Blog</span>
+                        <?php $siteName = \App\Models\Setting::get('site_name', 'ModernBlog'); ?>
+                        <span class="font-extrabold text-lg tracking-tight text-white">
+                            <?php echo htmlspecialchars($siteName); ?>
                         </span>
                     </div>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
+                    <p class="text-sm text-white/70 max-w-sm">
                         Un espacio moderno e interactivo para compartir artículos técnicos de alta calidad sobre desarrollo web, diseño de interfaces, inteligencia artificial y productividad.
                     </p>
                 </div>
 
                 <!-- Enlaces rápidos -->
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Navegación</h3>
+                    <h3 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Navegación</h3>
                     <ul class="space-y-2.5 text-sm">
-                        <li><a href="/" class="text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Inicio</a></li>
-                        <li><a href="/?route=search" class="text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Buscar Artículos</a></li>
+                        <li><a href="/" class="text-white/60 hover:text-white transition-colors">Inicio</a></li>
+                        <li><a href="/?route=search" class="text-white/60 hover:text-white transition-colors">Buscar Artículos</a></li>
                     </ul>
                 </div>
 
                 <!-- Legal / Categorías principales -->
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Categorías</h3>
+                    <h3 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Categorías</h3>
                     <ul class="space-y-2.5 text-sm">
                         <?php if (isset($categories)): ?>
                             <?php foreach(array_slice($categories, 0, 4) as $cat): ?>
                                 <li>
-                                    <a href="/?route=category&slug=<?php echo $cat->slug; ?>" class="text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                                    <a href="/?route=category&slug=<?php echo $cat->slug; ?>" class="text-white/60 hover:text-white transition-colors">
                                         <?php echo htmlspecialchars($cat->name); ?>
                                     </a>
                                 </li>
@@ -50,14 +48,14 @@ use App\Helpers;
             </div>
 
             <!-- Copyright -->
-            <div class="pt-8 border-t border-slate-200/60 dark:border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-                <p>&copy; <?php echo date('Y'); ?> ModernBlog. Creado con PHP, MySQL y Tailwind CSS.</p>
+            <div class="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
+                <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars(\App\Models\Setting::get('site_name', 'ModernBlog')); ?>. Creado con PHP, MySQL y Tailwind CSS.</p>
                 <div class="flex gap-4 items-center">
-                    <a href="/?route=page&slug=politica-privacidad" class="hover:text-slate-600 dark:hover:text-slate-300">Privacidad</a>
-                    <a href="/?route=page&slug=terminos-condiciones" class="hover:text-slate-600 dark:hover:text-slate-300">Términos</a>
-                    <a href="/?route=page&slug=contacto" class="hover:text-slate-600 dark:hover:text-slate-300">Contacto</a>
-                    <span class="text-slate-300 dark:text-slate-800">|</span>
-                    <a href="/?route=admin/login" class="hover:text-slate-600 dark:hover:text-slate-300 opacity-60 hover:opacity-100 transition-opacity">CMS</a>
+                    <a href="/?route=page&slug=politica-privacidad" class="hover:text-white transition-colors">Privacidad</a>
+                    <a href="/?route=page&slug=terminos-condiciones" class="hover:text-white transition-colors">Términos</a>
+                    <a href="/?route=page&slug=contacto" class="hover:text-white transition-colors">Contacto</a>
+                    <span class="text-white/20">|</span>
+                    <a href="/?route=admin/login" class="text-white/60 hover:text-white transition-colors">CMS</a>
                 </div>
             </div>
         </div>

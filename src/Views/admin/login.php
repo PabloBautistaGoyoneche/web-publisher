@@ -3,14 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($title) ? htmlspecialchars($title) : 'Iniciar Sesión'; ?></title>
+    <title><?php 
+        $siteName = \App\Models\Setting::get('site_name', 'ModernBlog');
+        $themeLight = \App\Models\Setting::get('theme_light_primary', '#7c3aed');
+        $themeDark = \App\Models\Setting::get('theme_dark_primary', '#a78bfa');
+        echo htmlspecialchars($siteName) . ' - Iniciar Sesión'; 
+    ?></title>
     <!-- Google Fonts & Tailwind -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
     
+    <!-- Estilos de Identidad del Sitio Dinámicos -->
     <style>
         body {
             font-family: 'Outfit', sans-serif;
+        }
+        :root {
+            --brand-50: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.95); ?>;
+            --brand-100: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.9); ?>;
+            --brand-200: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.75); ?>;
+            --brand-300: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.55); ?>;
+            --brand-400: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.35); ?>;
+            --brand-500: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.15); ?>;
+            --brand-600: <?php echo \App\Helpers::hexToRgbValues($themeLight); ?>;
+            --brand-700: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, -0.15); ?>;
+            --brand-800: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, -0.3); ?>;
+            --brand-900: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, -0.45); ?>;
+            --brand-950: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, -0.6); ?>;
+        }
+        .dark {
+            --brand-50: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, 0.95); ?>;
+            --brand-100: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, 0.9); ?>;
+            --brand-200: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, 0.75); ?>;
+            --brand-300: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, 0.55); ?>;
+            --brand-400: <?php echo \App\Helpers::hexToRgbValues($themeDark); ?>;
+            --brand-500: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.15); ?>;
+            --brand-600: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.3); ?>;
+            --brand-700: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.45); ?>;
+            --brand-800: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.6); ?>;
+            --brand-900: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.75); ?>;
+            --brand-950: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.85); ?>;
         }
     </style>
 </head>
@@ -18,18 +50,22 @@
     
     <!-- Efectos de Luces de Fondo (Gradientes) -->
     <div class="absolute -top-40 -left-40 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl"></div>
-    <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary-500/10 rounded-full blur-3xl"></div>
 
     <!-- Tarjeta de Login Glassmorphic -->
     <div class="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl relative z-10">
         
         <!-- Logo y cabecera -->
         <div class="text-center space-y-3 mb-8">
-            <div class="inline-flex w-14 w-14 h-14 bg-gradient-to-tr from-brand-600 to-indigo-600 rounded-2xl items-center justify-center text-white font-extrabold text-2xl shadow-lg shadow-brand-500/25 mb-2">
-                M
-            </div>
             <h1 class="text-2xl font-extrabold text-white tracking-tight">
-                Modern<span class="text-brand-400">Blog</span> Admin
+                <?php 
+                if (preg_match('/^(.*)(Blog)$/i', $siteName, $matches)) {
+                    echo htmlspecialchars($matches[1]) . '<span class="text-brand-400">' . htmlspecialchars($matches[2]) . '</span>';
+                } else {
+                    echo htmlspecialchars($siteName);
+                }
+                ?>
+                <span class="text-xs uppercase tracking-wider font-semibold text-slate-500 block mt-1">Admin</span>
             </h1>
             <p class="text-sm text-slate-400 font-light">
                 Panel de control administrativo

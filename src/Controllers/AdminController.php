@@ -509,6 +509,97 @@ class AdminController {
     }
 
     /**
+     * Muestra y procesa la configuración de la Identidad del Sitio.
+     */
+    public function settings(): void {
+        $this->checkAuth();
+
+        $error = null;
+        $success = false;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $siteName = trim($_POST['site_name'] ?? '');
+            
+            $themeLight = trim($_POST['theme_light_primary'] ?? '');
+            $themeLightSec = trim($_POST['theme_light_secondary'] ?? '');
+            $themeDark = trim($_POST['theme_dark_primary'] ?? '');
+            $themeDarkSec = trim($_POST['theme_dark_secondary'] ?? '');
+            
+            $themeLightBg = trim($_POST['theme_light_bg'] ?? '');
+            $themeDarkBg = trim($_POST['theme_dark_bg'] ?? '');
+            
+            $themeLightHeader = trim($_POST['theme_light_header'] ?? '');
+            $themeDarkHeader = trim($_POST['theme_dark_header'] ?? '');
+            
+            $themeLightFooter = trim($_POST['theme_light_footer'] ?? '');
+            $themeDarkFooter = trim($_POST['theme_dark_footer'] ?? '');
+
+            // Validar formato hexadecimal
+            $hexPattern = '/^#[0-9a-fA-F]{6}$/';
+
+            if (empty($siteName) || empty($themeLight) || empty($themeLightSec) || empty($themeDark) || empty($themeDarkSec) || 
+                empty($themeLightBg) || empty($themeDarkBg) || empty($themeLightHeader) || empty($themeDarkHeader) || 
+                empty($themeLightFooter) || empty($themeDarkFooter)) {
+                $error = 'Por favor, completa todos los campos.';
+            } elseif (!preg_match($hexPattern, $themeLight) || !preg_match($hexPattern, $themeLightSec) || 
+                      !preg_match($hexPattern, $themeDark) || !preg_match($hexPattern, $themeDarkSec) || 
+                      !preg_match($hexPattern, $themeLightBg) || !preg_match($hexPattern, $themeDarkBg) || 
+                      !preg_match($hexPattern, $themeLightHeader) || !preg_match($hexPattern, $themeDarkHeader) || 
+                      !preg_match($hexPattern, $themeLightFooter) || !preg_match($hexPattern, $themeDarkFooter)) {
+                $error = 'Los colores deben tener un formato hexadecimal válido (ej. #7C3AED).';
+            } else {
+                // Guardar configuraciones
+                \App\Models\Setting::set('site_name', $siteName);
+                \App\Models\Setting::set('theme_light_primary', $themeLight);
+                \App\Models\Setting::set('theme_light_secondary', $themeLightSec);
+                \App\Models\Setting::set('theme_dark_primary', $themeDark);
+                \App\Models\Setting::set('theme_dark_secondary', $themeDarkSec);
+                \App\Models\Setting::set('theme_light_bg', $themeLightBg);
+                \App\Models\Setting::set('theme_dark_bg', $themeDarkBg);
+                \App\Models\Setting::set('theme_light_header', $themeLightHeader);
+                \App\Models\Setting::set('theme_dark_header', $themeDarkHeader);
+                \App\Models\Setting::set('theme_light_footer', $themeLightFooter);
+                \App\Models\Setting::set('theme_dark_footer', $themeDarkFooter);
+                $success = true;
+            }
+        }
+
+        // Cargar valores actuales
+        $siteName = \App\Models\Setting::get('site_name', 'ModernBlog');
+        
+        $themeLight = \App\Models\Setting::get('theme_light_primary', '#7c3aed');
+        $themeLightSec = \App\Models\Setting::get('theme_light_secondary', '#4f46e5');
+        $themeDark = \App\Models\Setting::get('theme_dark_primary', '#a78bfa');
+        $themeDarkSec = \App\Models\Setting::get('theme_dark_secondary', '#6366f1');
+        
+        $themeLightBg = \App\Models\Setting::get('theme_light_bg', '#f8fafc');
+        $themeDarkBg = \App\Models\Setting::get('theme_dark_bg', '#020617');
+        
+        $themeLightHeader = \App\Models\Setting::get('theme_light_header', '#ffffff');
+        $themeDarkHeader = \App\Models\Setting::get('theme_dark_header', '#020617');
+        
+        $themeLightFooter = \App\Models\Setting::get('theme_light_footer', '#ffffff');
+        $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
+
+        $this->render('admin/settings', [
+            'title' => 'Identidad del Sitio - Admin Panel',
+            'siteName' => $siteName,
+            'themeLight' => $themeLight,
+            'themeLightSec' => $themeLightSec,
+            'themeDark' => $themeDark,
+            'themeDarkSec' => $themeDarkSec,
+            'themeLightBg' => $themeLightBg,
+            'themeDarkBg' => $themeDarkBg,
+            'themeLightHeader' => $themeLightHeader,
+            'themeDarkHeader' => $themeDarkHeader,
+            'themeLightFooter' => $themeLightFooter,
+            'themeDarkFooter' => $themeDarkFooter,
+            'error' => $error,
+            'success' => $success
+        ]);
+    }
+
+    /**
      * Renderiza vistas pasando variables extractadas.
      */
     private function render(string $viewName, array $data = []): void {

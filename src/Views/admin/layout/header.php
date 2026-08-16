@@ -5,34 +5,121 @@ if (session_status() === PHP_SESSION_NONE) {
 $adminName = $_SESSION['admin_name'] ?? 'Administrador';
 $adminUser = $_SESSION['admin_user'] ?? 'admin';
 $currentRoute = $_GET['route'] ?? 'admin/dashboard';
+
+// Cargar variables de identidad del sitio
+$siteName = \App\Models\Setting::get('site_name', 'ModernBlog');
+$themeLight = \App\Models\Setting::get('theme_light_primary', '#7c3aed');
+$themeLightSec = \App\Models\Setting::get('theme_light_secondary', '#4f46e5');
+$themeDark = \App\Models\Setting::get('theme_dark_primary', '#a78bfa');
+$themeDarkSec = \App\Models\Setting::get('theme_dark_secondary', '#6366f1');
+
+$themeLightBg = \App\Models\Setting::get('theme_light_bg', '#f8fafc');
+$themeDarkBg = \App\Models\Setting::get('theme_dark_bg', '#020617');
+
+$themeLightHeader = \App\Models\Setting::get('theme_light_header', '#ffffff');
+$themeDarkHeader = \App\Models\Setting::get('theme_dark_header', '#020617');
+
+$themeLightFooter = \App\Models\Setting::get('theme_light_footer', '#ffffff');
+$themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
 ?>
 <!DOCTYPE html>
 <html lang="es" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($title) ? htmlspecialchars($title) : 'Admin Panel'; ?></title>
+    <title><?php 
+        $pageTitle = isset($title) ? $title : 'Admin Panel'; 
+        echo htmlspecialchars(str_ireplace(['Modern Blog', 'ModernBlog'], $siteName, $pageTitle)); 
+    ?></title>
     <!-- Google Fonts & Tailwind -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="<?php echo \App\Helpers::asset('css/styles.css'); ?>">
     
+    <!-- Estilos de Identidad del Sitio Dinámicos -->
     <style>
         body {
             font-family: 'Outfit', 'Inter', sans-serif;
         }
+        :root {
+            /* Colores de Acento Principal */
+            --brand-50: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.95); ?>;
+            --brand-100: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.9); ?>;
+            --brand-200: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.75); ?>;
+            --brand-300: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.55); ?>;
+            --brand-400: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.35); ?>;
+            --brand-500: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, 0.15); ?>;
+            --brand-600: <?php echo \App\Helpers::hexToRgbValues($themeLight); ?>;
+            --brand-700: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, -0.15); ?>;
+            --brand-800: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, -0.3); ?>;
+            --brand-900: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, -0.45); ?>;
+            --brand-950: <?php echo \App\Helpers::adjustBrightnessRgb($themeLight, -0.6); ?>;
+
+            /* Colores Secundarios (Degradado) */
+            --secondary-50: <?php echo \App\Helpers::adjustBrightnessRgb($themeLightSec, 0.95); ?>;
+            --secondary-100: <?php echo \App\Helpers::adjustBrightnessRgb($themeLightSec, 0.9); ?>;
+            --secondary-200: <?php echo \App\Helpers::adjustBrightnessRgb($themeLightSec, 0.75); ?>;
+            --secondary-300: <?php echo \App\Helpers::adjustBrightnessRgb($themeLightSec, 0.55); ?>;
+            --secondary-400: <?php echo \App\Helpers::adjustBrightnessRgb($themeLightSec, 0.35); ?>;
+            --secondary-500: <?php echo \App\Helpers::adjustBrightnessRgb($themeLightSec, 0.15); ?>;
+            --secondary-600: <?php echo \App\Helpers::hexToRgbValues($themeLightSec); ?>;
+            --secondary-700: <?php echo \App\Helpers::adjustBrightnessRgb($themeLightSec, -0.15); ?>;
+            --secondary-800: <?php echo \App\Helpers::adjustBrightnessRgb($themeLightSec, -0.3); ?>;
+            --secondary-900: <?php echo \App\Helpers::adjustBrightnessRgb($themeLightSec, -0.45); ?>;
+            --secondary-950: <?php echo \App\Helpers::adjustBrightnessRgb($themeLightSec, -0.6); ?>;
+
+            /* Fondos del Sitio */
+            --sitebg: <?php echo \App\Helpers::hexToRgbValues($themeLightBg); ?>;
+            --siteheader: <?php echo \App\Helpers::hexToRgbValues($themeLightHeader); ?>;
+            --sitefooter: <?php echo \App\Helpers::hexToRgbValues($themeLightFooter); ?>;
+        }
+        .dark {
+            /* Colores de Acento Principal */
+            --brand-50: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, 0.95); ?>;
+            --brand-100: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, 0.9); ?>;
+            --brand-200: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, 0.75); ?>;
+            --brand-300: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, 0.55); ?>;
+            --brand-400: <?php echo \App\Helpers::hexToRgbValues($themeDark); ?>;
+            --brand-500: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.15); ?>;
+            --brand-600: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.3); ?>;
+            --brand-700: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.45); ?>;
+            --brand-800: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.6); ?>;
+            --brand-900: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.75); ?>;
+            --brand-950: <?php echo \App\Helpers::adjustBrightnessRgb($themeDark, -0.85); ?>;
+
+            /* Colores Secundarios (Degradado) */
+            --secondary-50: <?php echo \App\Helpers::adjustBrightnessRgb($themeDarkSec, 0.95); ?>;
+            --secondary-100: <?php echo \App\Helpers::adjustBrightnessRgb($themeDarkSec, 0.9); ?>;
+            --secondary-200: <?php echo \App\Helpers::adjustBrightnessRgb($themeDarkSec, 0.75); ?>;
+            --secondary-300: <?php echo \App\Helpers::adjustBrightnessRgb($themeDarkSec, 0.55); ?>;
+            --secondary-400: <?php echo \App\Helpers::hexToRgbValues($themeDarkSec); ?>;
+            --secondary-500: <?php echo \App\Helpers::adjustBrightnessRgb($themeDarkSec, -0.15); ?>;
+            --secondary-600: <?php echo \App\Helpers::adjustBrightnessRgb($themeDarkSec, -0.3); ?>;
+            --secondary-700: <?php echo \App\Helpers::adjustBrightnessRgb($themeDarkSec, -0.45); ?>;
+            --secondary-800: <?php echo \App\Helpers::adjustBrightnessRgb($themeDarkSec, -0.6); ?>;
+            --secondary-900: <?php echo \App\Helpers::adjustBrightnessRgb($themeDarkSec, -0.75); ?>;
+            --secondary-950: <?php echo \App\Helpers::adjustBrightnessRgb($themeDarkSec, -0.85); ?>;
+
+            /* Fondos del Sitio */
+            --sitebg: <?php echo \App\Helpers::hexToRgbValues($themeDarkBg); ?>;
+            --siteheader: <?php echo \App\Helpers::hexToRgbValues($themeDarkHeader); ?>;
+            --sitefooter: <?php echo \App\Helpers::hexToRgbValues($themeDarkFooter); ?>;
+        }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 h-full flex flex-col md:flex-row overflow-hidden transition-colors duration-300">
+<body class="bg-sitebg text-slate-800 dark:text-slate-100 h-full flex flex-col md:flex-row overflow-hidden transition-colors duration-300">
 
     <!-- Sidebar Lateral de Administración -->
     <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col z-20 border-r border-slate-800">
         <!-- Logo y Marca -->
         <div class="h-20 flex items-center px-6 border-b border-slate-800 gap-3">
-            <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-brand-500/20">
-                M
-            </span>
             <span class="font-extrabold text-lg tracking-tight text-white">
-                Modern<span class="text-brand-400">Admin</span>
+                <?php 
+                if (preg_match('/^(.*)(Blog)$/i', $siteName, $matches)) {
+                    echo htmlspecialchars($matches[1]) . '<span class="text-brand-400">Admin</span>';
+                } else {
+                    echo htmlspecialchars($siteName);
+                }
+                ?>
             </span>
         </div>
 
@@ -83,8 +170,16 @@ $currentRoute = $_GET['route'] ?? 'admin/dashboard';
                 <?php endif; ?>
             </a>
 
-            <div class="h-px bg-slate-800 my-6"></div>
+            <!-- Identidad del Sitio -->
+            <a href="/?route=admin/settings" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo $currentRoute === 'admin/settings' ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-3"></path></svg>
+                Identidad del Sitio
+            </a>
 
+        </nav>
+
+        <!-- Acciones del pie de barra lateral -->
+        <div class="p-4 border-t border-slate-800 space-y-1.5 flex-shrink-0">
             <!-- Ver Sitio -->
             <a href="/" target="_blank" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
@@ -96,30 +191,30 @@ $currentRoute = $_GET['route'] ?? 'admin/dashboard';
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                 Cerrar Sesión
             </a>
-        </nav>
+        </div>
     </aside>
 
     <!-- Contenido Principal -->
     <div class="flex-grow flex flex-col overflow-hidden h-full">
         <!-- Topbar Horizontal -->
-        <header class="h-20 bg-white dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800/80 px-6 sm:px-8 flex items-center justify-between flex-shrink-0 transition-colors duration-300">
+        <header class="h-20 bg-siteheader border-b border-slate-200/60 dark:border-slate-800/80 px-6 sm:px-8 flex items-center justify-between flex-shrink-0 transition-colors duration-300">
             
             <!-- Título de Sección -->
-            <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <h2 class="text-xl font-bold tracking-tight text-white">
                 Panel de Administración
             </h2>
 
             <!-- Perfil del Administrador -->
             <div class="flex items-center gap-3.5">
                 <div class="flex flex-col text-right hidden sm:flex">
-                    <span class="text-sm font-bold text-slate-800 dark:text-slate-200"><?php echo htmlspecialchars($adminName); ?></span>
-                    <span class="text-xs text-slate-400 font-medium">@<?php echo htmlspecialchars($adminUser); ?></span>
+                    <span class="text-sm font-bold text-white"><?php echo htmlspecialchars($adminName); ?></span>
+                    <span class="text-xs text-white/65 font-medium">@<?php echo htmlspecialchars($adminUser); ?></span>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white font-extrabold shadow-md shadow-brand-500/10 uppercase">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-secondary-600 flex items-center justify-center text-white font-extrabold shadow-md shadow-brand-500/10 uppercase">
                     <?php echo substr($adminName, 0, 1); ?>
                 </div>
             </div>
         </header>
 
         <!-- Contenedor del Cuerpo (Scrollable) -->
-        <main class="flex-grow overflow-y-auto p-6 sm:p-8 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <main class="flex-grow overflow-y-auto p-6 sm:p-8 bg-sitebg transition-colors duration-300">
