@@ -1,0 +1,523 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Models\User;
+use App\Models\Post;
+use App\Models\Category;
+use App\Models\Comment;
+use App\Helpers;
+
+class AdminController {
+    
+    /**
+     * Inicializa la sesión y verifica si el usuario está autenticado como administrador.
+     */
+    private function checkAuth(): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (!isset($_SESSION['admin_user']) || $_SESSION['admin_role'] !== 'admin') {
+            header("Location: /?route=admin/login");
+            exit;
+        }
+    }
+
+    /**
+     * Procesa la vista y acción de login.
+     */
+    public function login(): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Si ya está logueado, ir directo al dashboard
+        if (isset($_SESSION['admin_user']) && $_SESSION['admin_role'] === 'admin') {
+            header("Location: /?route=admin/dashboard");
+            exit;
+        }
+
+        $error = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $username = trim($_POST['username'] ?? '');
+            $password = trim($_POST['password'] ?? '');
+
+            if (empty($username) || empty($password)) {
+                $error = 'Por favor, ingresa tu usuario y contraseña.';
+            } else {
+                $user = User::verify($username, $password);
+                if ($user && $user->role === 'admin') {
+                    $_SESSION['admin_user'] = $user->username;
+                    $_SESSION['admin_name'] = $user->display_name;
+                    $_SESSION['admin_role'] = $user->role;
+                    $_SESSION['admin_id'] = $user->id;
+                    
+                    header("Location: /?route=admin/dashboard");
+                    exit;
+                } else {
+                    $error = 'Usuario o contraseña incorrectos, o no tienes permisos de administrador.';
+                }
+            }
+        }
+
+        // Cargar vista de login directa
+        $this->render('admin/login', [
+            'title' => 'Iniciar Sesión - Admin Panel',
+            'error' => $error
+        ]);
+    }
+
+    /**
+     * Cierra la sesión administrativa.
+     */
+    public function logout(): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $_SESSION = [];
+        session_destroy();
+        header("Location: /?route=admin/login");
+        exit;
+    }
+
+    /**
+     * Muestra el Dashboard administrativo con estadísticas.
+     */
+    public function dashboard(): void {
+        $this->checkAuth();
+
+        $stats = [
+            'posts' => Post::count(),
+            'comments' => Comment::count(),
+            'comments_pending' => Comment::countPending(),
+            'views' => Post::totalViews(),
+            'categories' => Category::count(),
+            'messages' => \App\Models\Message::count()
+        ];
+
+        $latestComments = array_slice(Comment::all(), 0, 5);
+        $recentPosts = array_slice(Post::all(), 0, 5);
+
+        $this->render('admin/dashboard', [
+            'title' => 'Dashboard - Admin Panel',
+            'stats' => $stats,
+            'latestComments' => $latestComments,
+            'recentPosts' => $recentPosts
+        ]);
+    }
+
+    /**
+     * CRUD: Listar Entradas
+     */
+    public function posts(): void {
+        $this->checkAuth();
+        $posts = Post::all();
+
+        $this->render('admin/posts/index', [
+            'title' => 'Entradas - Admin Panel',
+            'posts' => $posts
+        ]);
+    }
+
+    /**
+     * CRUD: Crear Entrada
+     */
+    public function createPost(): void {
+        $this->checkAuth();
+        
+        $error = null;
+        $categories = Category::all();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $title = trim($_POST['title'] ?? '');
+            $slug = trim($_POST['slug'] ?? '');
+            $category_id = (int)($_POST['category_id'] ?? 0);
+            $excerpt = trim($_POST['excerpt'] ?? '');
+            $content = trim($_POST['content'] ?? '');
+            $status = trim($_POST['status'] ?? 'draft');
+
+            // Autogenerar slug si está vacío
+            if (empty($slug)) {
+                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
+            }
+
+            if (empty($title) || empty($content) || $category_id === 0) {
+                $error = 'Por favor, completa todos los campos requeridos.';
+            } else {
+                // Subir imagen
+                $imageName = null;
+                if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] === UPLOAD_ERR_OK) {
+                    $tmpName = $_FILES['featured_image']['tmp_name'];
+                    $origName = basename($_FILES['featured_image']['name']);
+                    $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                    $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+                    
+                    if (in_array($ext, $allowed)) {
+                        $imageName = uniqid('post_') . '.' . $ext;
+                        $destPath = dirname(dirname(__DIR__)) . '/public/uploads/' . $imageName;
+                        move_uploaded_file($tmpName, $destPath);
+                    } else {
+                        $error = 'Tipo de imagen no permitido. Solo se permiten JPG, PNG y WEBP.';
+                    }
+                }
+
+                if (!$error) {
+                    $success = Post::create(
+                        $_SESSION['admin_id'],
+                        $category_id,
+                        $title,
+                        $slug,
+                        $excerpt,
+                        $content,
+                        $imageName,
+                        $status
+                    );
+
+                    if ($success) {
+                        header("Location: /?route=admin/posts");
+                        exit;
+                    } else {
+                        $error = 'Ocurrió un error al crear la entrada. El slug podría estar duplicado.';
+                    }
+                }
+            }
+        }
+
+        $this->render('admin/posts/create', [
+            'title' => 'Nueva Entrada - Admin Panel',
+            'categories' => $categories,
+            'error' => $error
+        ]);
+    }
+
+    /**
+     * CRUD: Editar Entrada
+     */
+    public function editPost(): void {
+        $this->checkAuth();
+        $id = (int)($_GET['id'] ?? 0);
+        $post = Post::find($id);
+
+        if (!$post) {
+            header("Location: /?route=admin/posts");
+            exit;
+        }
+
+        $error = null;
+        $categories = Category::all();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $title = trim($_POST['title'] ?? '');
+            $slug = trim($_POST['slug'] ?? '');
+            $category_id = (int)($_POST['category_id'] ?? 0);
+            $excerpt = trim($_POST['excerpt'] ?? '');
+            $content = trim($_POST['content'] ?? '');
+            $status = trim($_POST['status'] ?? 'draft');
+
+            if (empty($slug)) {
+                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
+            }
+
+            if (empty($title) || empty($content) || $category_id === 0) {
+                $error = 'Por favor, completa todos los campos requeridos.';
+            } else {
+                $imageName = $post->featured_image;
+
+                // Subir nueva imagen si se proporciona
+                if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] === UPLOAD_ERR_OK) {
+                    $tmpName = $_FILES['featured_image']['tmp_name'];
+                    $origName = basename($_FILES['featured_image']['name']);
+                    $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                    $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+                    
+                    if (in_array($ext, $allowed)) {
+                        $imageName = uniqid('post_') . '.' . $ext;
+                        $destPath = dirname(dirname(__DIR__)) . '/public/uploads/' . $imageName;
+                        move_uploaded_file($tmpName, $destPath);
+                        
+                        // Eliminar imagen vieja
+                        if ($post->featured_image && file_exists(dirname(dirname(__DIR__)) . '/public/uploads/' . $post->featured_image)) {
+                            @unlink(dirname(dirname(__DIR__)) . '/public/uploads/' . $post->featured_image);
+                        }
+                    } else {
+                        $error = 'Tipo de imagen no permitido. Solo se permiten JPG, PNG y WEBP.';
+                    }
+                }
+
+                if (!$error) {
+                    $success = Post::update(
+                        $post->id,
+                        $category_id,
+                        $title,
+                        $slug,
+                        $excerpt,
+                        $content,
+                        $imageName,
+                        $status
+                    );
+
+                    if ($success) {
+                        header("Location: /?route=admin/posts");
+                        exit;
+                    } else {
+                        $error = 'Ocurrió un error al actualizar la entrada. El slug podría estar duplicado.';
+                    }
+                }
+            }
+        }
+
+        $this->render('admin/posts/edit', [
+            'title' => 'Editar Entrada - Admin Panel',
+            'post' => $post,
+            'categories' => $categories,
+            'error' => $error
+        ]);
+    }
+
+    /**
+     * CRUD: Eliminar Entrada
+     */
+    public function deletePost(): void {
+        $this->checkAuth();
+        $id = (int)($_GET['id'] ?? 0);
+        $post = Post::find($id);
+
+        if ($post) {
+            // Eliminar imagen del servidor
+            if ($post->featured_image && file_exists(dirname(dirname(__DIR__)) . '/public/uploads/' . $post->featured_image)) {
+                @unlink(dirname(dirname(__DIR__)) . '/public/uploads/' . $post->featured_image);
+            }
+            Post::delete($id);
+        }
+
+        header("Location: /?route=admin/posts");
+        exit;
+    }
+
+    /**
+     * CRUD: Gestionar Categorías (Lista y Creación en una sola pantalla)
+     */
+    public function categories(): void {
+        $this->checkAuth();
+        
+        $error = null;
+        
+        // Manejar envío de nueva categoría
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_category'])) {
+            $name = trim($_POST['name'] ?? '');
+            $slug = trim($_POST['slug'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+
+            if (empty($slug)) {
+                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name), '-'));
+            }
+
+            if (empty($name)) {
+                $error = 'El nombre de la categoría es obligatorio.';
+            } else {
+                $success = Category::create($name, $slug, $description);
+                if ($success) {
+                    header("Location: /?route=admin/categories");
+                    exit;
+                } else {
+                    $error = 'Ocurrió un error al guardar la categoría. El nombre o slug podría estar duplicado.';
+                }
+            }
+        }
+
+        $categories = Category::all();
+
+        $this->render('admin/categories/index', [
+            'title' => 'Categorías - Admin Panel',
+            'categories' => $categories,
+            'error' => $error
+        ]);
+    }
+
+    /**
+     * CRUD: Eliminar Categoría
+     */
+    public function deleteCategory(): void {
+        $this->checkAuth();
+        $id = (int)($_GET['id'] ?? 0);
+        Category::delete($id);
+        header("Location: /?route=admin/categories");
+        exit;
+    }
+
+    /**
+     * CRUD: Listar y Moderar Comentarios
+     */
+    public function comments(): void {
+        $this->checkAuth();
+        $comments = Comment::all();
+
+        $this->render('admin/comments/index', [
+            'title' => 'Comentarios - Admin Panel',
+            'comments' => $comments
+        ]);
+    }
+
+    /**
+     * CRUD: Aprobar Comentario
+     */
+    public function approveComment(): void {
+        $this->checkAuth();
+        $id = (int)($_GET['id'] ?? 0);
+        Comment::approve($id);
+        header("Location: /?route=admin/comments");
+        exit;
+    }
+
+    /**
+     * CRUD: Eliminar Comentario
+     */
+    public function deleteComment(): void {
+        $this->checkAuth();
+        $id = (int)($_GET['id'] ?? 0);
+        Comment::delete($id);
+        header("Location: /?route=admin/comments");
+        exit;
+    }
+
+    /**
+     * CRUD: Listar Páginas Estáticas
+     */
+    public function pages(): void {
+        $this->checkAuth();
+        $pages = \App\Models\Page::all();
+
+        $this->render('admin/pages/index', [
+            'title' => 'Páginas Estáticas - Admin Panel',
+            'pages' => $pages
+        ]);
+    }
+
+    /**
+     * CRUD: Crear Página Estática
+     */
+    public function createPage(): void {
+        $this->checkAuth();
+        $error = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $title = trim($_POST['title'] ?? '');
+            $slug = trim($_POST['slug'] ?? '');
+            $content = trim($_POST['content'] ?? '');
+
+            if (empty($slug)) {
+                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
+            }
+
+            if (empty($title) || empty($content)) {
+                $error = 'Por favor, completa todos los campos obligatorios.';
+            } else {
+                $success = \App\Models\Page::create($title, $slug, $content);
+                if ($success) {
+                    header("Location: /?route=admin/pages");
+                    exit;
+                } else {
+                    $error = 'Ocurrió un error al guardar la página. El slug podría estar duplicado.';
+                }
+            }
+        }
+
+        $this->render('admin/pages/create', [
+            'title' => 'Nueva Página - Admin Panel',
+            'error' => $error
+        ]);
+    }
+
+    /**
+     * CRUD: Editar Página Estática
+     */
+    public function editPage(): void {
+        $this->checkAuth();
+        $id = (int)($_GET['id'] ?? 0);
+        $page = \App\Models\Page::find($id);
+
+        if (!$page) {
+            header("Location: /?route=admin/pages");
+            exit;
+        }
+
+        $error = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $title = trim($_POST['title'] ?? '');
+            $slug = trim($_POST['slug'] ?? '');
+            $content = trim($_POST['content'] ?? '');
+
+            if (empty($slug)) {
+                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
+            }
+
+            if (empty($title) || empty($content)) {
+                $error = 'Por favor, completa todos los campos obligatorios.';
+            } else {
+                $success = \App\Models\Page::update($page->id, $title, $slug, $content);
+                if ($success) {
+                    header("Location: /?route=admin/pages");
+                    exit;
+                } else {
+                    $error = 'Ocurrió un error al actualizar la página. El slug podría estar duplicado.';
+                }
+            }
+        }
+
+        $this->render('admin/pages/edit', [
+            'title' => 'Editar Página - Admin Panel',
+            'page' => $page,
+            'error' => $error
+        ]);
+    }
+
+    /**
+     * CRUD: Eliminar Página Estática
+     */
+    public function deletePage(): void {
+        $this->checkAuth();
+        $id = (int)($_GET['id'] ?? 0);
+        \App\Models\Page::delete($id);
+        header("Location: /?route=admin/pages");
+        exit;
+    }
+
+    /**
+     * Bandeja de Entrada: Listar Mensajes de Contacto
+     */
+    public function messages(): void {
+        $this->checkAuth();
+        $messages = \App\Models\Message::all();
+
+        $this->render('admin/messages/index', [
+            'title' => 'Bandeja de Mensajes - Admin Panel',
+            'messages' => $messages
+        ]);
+    }
+
+    /**
+     * Bandeja de Entrada: Eliminar Mensaje
+     */
+    public function deleteMessage(): void {
+        $this->checkAuth();
+        $id = (int)($_GET['id'] ?? 0);
+        \App\Models\Message::delete($id);
+        header("Location: /?route=admin/messages");
+        exit;
+    }
+
+    /**
+     * Renderiza vistas pasando variables extractadas.
+     */
+    private function render(string $viewName, array $data = []): void {
+        extract($data);
+        $viewFile = dirname(__DIR__) . "/Views/{$viewName}.php";
+        if (file_exists($viewFile)) {
+            require $viewFile;
+        } else {
+            echo "Error: La vista administrativa '{$viewName}' no existe.";
+        }
+    }
+}

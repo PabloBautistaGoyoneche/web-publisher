@@ -1,0 +1,30 @@
+# Dependencias de Node
+/node_modules/
+
+# Archivos del Sistema Operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Configuraciones de Editores e IDEs
+/.idea/
+/.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Logs y Archivos Temporales
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Carpeta de Subidas (Ignorar imágenes subidas por el usuario pero conservar las imágenes semilla por defecto)
+/public/uploads/*
+!/public/uploads/avatar_alex.png
+!/public/uploads/post_ai_productivity.jpg
+!/public/uploads/post_glassmorphism.jpg
+!/public/uploads/post_minimalism.jpg
+!/public/uploads/post_web_future.jpg
