@@ -26,8 +26,86 @@ use App\Helpers;
     // Reemplazar nombre del sitio en el título de la página
     $pageTitle = isset($title) ? $title : $siteName;
     $pageTitle = str_ireplace(['Modern Blog', 'ModernBlog'], $siteName, $pageTitle);
+    
+    // SEO Meta Title, Description & Keywords Auto-generation for Articles
+    $seoDescription = \App\Models\Setting::get('site_description', 'Un blog moderno e interactivo.');
+    $seoKeywords = 'tecnologia, blog, programacion, desarrollo web';
+    
+    if (isset($post) && $post instanceof \App\Models\Post) {
+        // Meta Title: max 60 characters
+        $rawTitle = $post->title;
+        if (mb_strlen($rawTitle) > 60) {
+            $pageTitle = mb_substr($rawTitle, 0, 57) . '...';
+        } else {
+            $pageTitle = $rawTitle;
+        }
+        
+        // Meta Description: max 155 characters ending in "..."
+        $cleanContent = strip_tags($post->content);
+        $cleanContent = preg_replace('/\s+/', ' ', $cleanContent);
+        $cleanContent = trim($cleanContent);
+        
+        if (mb_strlen($cleanContent) > 155) {
+            $seoDescription = mb_substr($cleanContent, 0, 152) . '...';
+        } else {
+            if (mb_strlen($cleanContent) > 152) {
+                $seoDescription = mb_substr($cleanContent, 0, 152) . '...';
+            } else {
+                $seoDescription = $cleanContent;
+            }
+        }
+        
+        // Meta Keywords Extraction: automatic from title and content
+        $keywordsList = [];
+        
+        // Title words (length >= 4)
+        $titleClean = strtolower(preg_replace('/[^a-záéíóúüñ\s]/u', '', $post->title));
+        $titleWords = explode(' ', $titleClean);
+        foreach ($titleWords as $word) {
+            $word = trim($word);
+            if (mb_strlen($word) >= 4) {
+                $keywordsList[] = $word;
+            }
+        }
+        
+        // Content frequent words (excluding stop words)
+        $contentClean = strtolower(preg_replace('/[^a-záéíóúüñ\s]/u', '', strip_tags($post->content)));
+        $contentWords = explode(' ', $contentClean);
+        
+        $stopWords = [
+            'para', 'como', 'este', 'esta', 'estos', 'estas', 'todo', 'toda', 'todos', 'todas', 
+            'sobre', 'entre', 'desde', 'hasta', 'hacia', 'donde', 'cuando', 'quien', 'cual', 'cuyo', 
+            'pero', 'sino', 'porque', 'pues', 'aunque', 'tambien', 'tampoco', 'luego', 'despues', 
+            'antes', 'ahora', 'mientras', 'durante', 'contra', 'segundo', 'primero', 'suyo', 'suya', 
+            'suyos', 'suyas', 'nuestro', 'nuestra', 'nuestros', 'nuestras', 'vuestro', 'vuestra', 
+            'vuestros', 'vuestras', 'con', 'sin', 'por', 'del', 'los', 'las', 'una', 'uno', 'unos', 
+            'unas', 'sus', 'ese', 'esa', 'esos', 'esas', 'muy', 'mas', 'bien', 'mal', 'siempre', 
+            'nunca', 'jamas', 'tal', 'tales', 'otro', 'otra', 'otros', 'otras', 'algun', 'alguna', 
+            'algunos', 'algunas', 'ningun', 'ninguna', 'ningunos', 'ningunas', 'cada', 'ambos', 'ambas', 
+            'mucho', 'mucha', 'muchos', 'muchas', 'poco', 'poca', 'pocos', 'pocas', 'tanto', 'tanta', 
+            'tantos', 'tantas', 'demas', 'mismo', 'misma', 'mismos', 'mismas', 'propio', 'propia', 
+            'propios', 'propias', 'tiene', 'tienen', 'hacer', 'puede', 'pueden', 'crear', 'nuevo', 'nueva'
+        ];
+        
+        $wordCounts = [];
+        foreach ($contentWords as $word) {
+            $word = trim($word);
+            if (mb_strlen($word) >= 4 && !in_array($word, $stopWords)) {
+                $wordCounts[$word] = isset($wordCounts[$word]) ? $wordCounts[$word] + 1 : 1;
+            }
+        }
+        
+        arsort($wordCounts);
+        $topContentWords = array_slice(array_keys($wordCounts), 0, 10);
+        $keywordsList = array_merge($keywordsList, $topContentWords);
+        
+        $keywordsList = array_unique($keywordsList);
+        $seoKeywords = implode(', ', array_slice($keywordsList, 0, 15));
+    }
     ?>
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
+    <meta name="description" content="<?php echo htmlspecialchars($seoDescription); ?>">
+    <meta name="keywords" content="<?php echo htmlspecialchars($seoKeywords); ?>">
     
     <!-- Tailwind Styles (Compilado) -->
     <link rel="stylesheet" href="<?php echo Helpers::asset('css/styles.css'); ?>">
@@ -138,12 +216,35 @@ use App\Helpers;
                         </button>
                         
                         <!-- Dropdown de categorías -->
-                        <div class="absolute left-0 mt-2 w-48 rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                        <div class="absolute left-0 mt-2 w-56 rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                             <?php if (isset($categories)): ?>
-                                <?php foreach($categories as $cat): ?>
-                                    <a href="/?route=category&slug=<?php echo $cat->slug; ?>" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
-                                        <?php echo htmlspecialchars($cat->name); ?>
-                                    </a>
+                                <?php 
+                                $parentCategories = array_filter($categories, function($c) { return $c->parent_id === null; });
+                                foreach($parentCategories as $cat): 
+                                    $subcategories = array_filter($categories, function($c) use ($cat) { return $c->parent_id === $cat->id; });
+                                ?>
+                                    <?php if (!empty($subcategories)): ?>
+                                        <!-- Categoría con Subcategorías -->
+                                        <div class="relative group/sub">
+                                            <a href="/?route=category&slug=<?php echo $cat->slug; ?>" class="flex items-center justify-between px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                                                <span><?php echo htmlspecialchars($cat->name); ?></span>
+                                                <svg class="w-3.5 h-3.5 transform -rotate-90 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                            </a>
+                                            <!-- Sub-dropdown lateral -->
+                                            <div class="absolute left-full top-0 ml-1 w-48 rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 py-2 opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-200">
+                                                <?php foreach($subcategories as $sub): ?>
+                                                    <a href="/?route=category&slug=<?php echo $sub->slug; ?>" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                                                        <?php echo htmlspecialchars($sub->name); ?>
+                                                    </a>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    <?php else: ?>
+                                        <!-- Categoría simple -->
+                                        <a href="/?route=category&slug=<?php echo $cat->slug; ?>" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                                            <?php echo htmlspecialchars($cat->name); ?>
+                                        </a>
+                                    <?php endif; ?>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
@@ -181,25 +282,59 @@ use App\Helpers;
         </div>
         
         <!-- Menú Móvil -->
-        <div id="mobile-menu" class="hidden xl:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-4 space-y-3">
-            <a href="/" class="block font-medium py-2 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400">Inicio</a>
-            <a href="/?route=page&slug=sobre-el-autor" class="block font-medium py-2 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400">Sobre Nosotros</a>
-            <div class="font-medium text-slate-500 py-1">Categorías:</div>
-            <div class="pl-4 space-y-2 border-l border-slate-200 dark:border-slate-800 mb-2">
-                <?php if (isset($categories)): ?>
-                    <?php foreach($categories as $cat): ?>
-                        <a href="/?route=category&slug=<?php echo $cat->slug; ?>" class="block text-sm text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400">
-                            <?php echo htmlspecialchars($cat->name); ?>
-                        </a>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
-            <a href="/?route=page&slug=contacto" class="block font-medium py-2 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400">Contacto</a>
+        <div id="mobile-menu" class="hidden xl:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 py-6 flex flex-col items-center gap-2">
+            <a href="/" class="w-full text-center font-semibold py-2.5 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 transition-colors text-base">Inicio</a>
+            <a href="/?route=page&slug=sobre-el-autor" class="w-full text-center font-semibold py-2.5 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 transition-colors text-base">Sobre Nosotros</a>
             
-            <form action="/" method="GET" class="relative pt-2">
+            <!-- Acordeón de Categorías -->
+            <div class="w-full flex flex-col items-center">
+                <button id="mobile-categories-toggle" class="w-full text-center font-semibold py-2.5 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 flex items-center justify-center gap-1 focus:outline-none text-base">
+                    Categorías
+                    <svg id="mobile-categories-arrow" class="w-4 h-4 transform transition-transform duration-200 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="mobile-categories-list" class="hidden w-full max-w-xs space-y-1.5 py-2 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800/50 mt-1 transition-all duration-300">
+                    <?php if (isset($categories)): ?>
+                        <?php 
+                        $parentCategories = array_filter($categories, function($c) { return $c->parent_id === null; });
+                        foreach($parentCategories as $cat): 
+                            $subcategories = array_filter($categories, function($c) use ($cat) { return $c->parent_id === $cat->id; });
+                        ?>
+                            <?php if (!empty($subcategories)): ?>
+                                <!-- Categoría Padre con Subcategorías -->
+                                <div class="w-full flex flex-col items-center">
+                                    <button class="mobile-sub-toggle w-full text-center text-sm py-2 text-slate-700 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 font-semibold flex items-center justify-center gap-1 focus:outline-none">
+                                        <?php echo htmlspecialchars($cat->name); ?>
+                                        <svg class="mobile-sub-arrow w-3.5 h-3.5 transform transition-transform duration-200 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    <div class="mobile-sub-list hidden w-full bg-slate-100/50 dark:bg-slate-950/30 py-1 space-y-1 rounded-xl">
+                                        <a href="/?route=category&slug=<?php echo $cat->slug; ?>" class="block text-center text-xs py-1.5 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 font-medium italic">
+                                            Ver todo en <?php echo htmlspecialchars($cat->name); ?>
+                                        </a>
+                                        <?php foreach($subcategories as $sub): ?>
+                                            <a href="/?route=category&slug=<?php echo $sub->slug; ?>" class="block text-center text-xs py-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 font-medium">
+                                                <?php echo htmlspecialchars($sub->name); ?>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <!-- Categoría Simple -->
+                                <a href="/?route=category&slug=<?php echo $cat->slug; ?>" class="block text-center text-sm py-2 text-slate-700 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 font-semibold">
+                                    <?php echo htmlspecialchars($cat->name); ?>
+                                </a>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <a href="/?route=page&slug=contacto" class="w-full text-center font-semibold py-2.5 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 transition-colors text-base">Contacto</a>
+            
+            <!-- Buscador Rediseñado -->
+            <form action="/" method="GET" class="w-full max-w-xs relative mt-4">
                 <input type="hidden" name="route" value="search">
-                <input type="text" name="s" placeholder="Buscar..." value="<?php echo isset($query) ? htmlspecialchars($query) : ''; ?>" class="w-full px-4 py-2 pl-10 text-sm bg-slate-100 dark:bg-slate-900 border border-transparent rounded-xl focus:outline-none">
-                <div class="absolute left-3 top-4.5 text-slate-400">
+                <input type="text" name="s" placeholder="Buscar en el blog..." value="<?php echo isset($query) ? htmlspecialchars($query) : ''; ?>" class="w-full px-4 py-2.5 pl-10 text-sm text-center bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-brand-500 focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                <div class="absolute left-3 top-3 text-slate-400 dark:text-slate-500">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
             </form>

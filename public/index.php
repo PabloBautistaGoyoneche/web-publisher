@@ -82,11 +82,16 @@ try {
             break;
             
         case 'admin/posts/create':
-            $admin->createPost();
-            break;
+            header("Location: /?route=admin/posts#create");
+            exit;
             
         case 'admin/posts/edit':
-            $admin->editPost();
+            $id = (int)($_GET['id'] ?? 0);
+            header("Location: /?route=admin/posts#edit-$id");
+            exit;
+            
+        case 'admin/posts/get':
+            $admin->getPostJson();
             break;
             
         case 'admin/posts/delete':
@@ -99,6 +104,10 @@ try {
             
         case 'admin/categories/delete':
             $admin->deleteCategory();
+            break;
+            
+        case 'admin/categories/reorder':
+            $admin->reorderCategories();
             break;
             
         case 'admin/comments':

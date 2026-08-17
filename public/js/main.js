@@ -36,3 +36,34 @@ if (mobileMenuButton && mobileMenu) {
         mobileMenu.classList.toggle('hidden');
     });
 }
+
+// Acordeón de Categorías en Menú Móvil
+const mobileCatToggle = document.getElementById('mobile-categories-toggle');
+const mobileCatList = document.getElementById('mobile-categories-list');
+const mobileCatArrow = document.getElementById('mobile-categories-arrow');
+
+if (mobileCatToggle && mobileCatList) {
+    mobileCatToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        mobileCatList.classList.toggle('hidden');
+        if (mobileCatArrow) {
+            mobileCatArrow.classList.toggle('rotate-180');
+        }
+    });
+}
+
+// Acordeón de Subcategorías en Menú Móvil
+const mobileSubToggles = document.querySelectorAll('.mobile-sub-toggle');
+mobileSubToggles.forEach(toggle => {
+    toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        const subList = toggle.nextElementSibling;
+        const arrow = toggle.querySelector('.mobile-sub-arrow');
+        if (subList) {
+            subList.classList.toggle('hidden');
+        }
+        if (arrow) {
+            arrow.classList.toggle('rotate-180');
+        }
+    });
+});

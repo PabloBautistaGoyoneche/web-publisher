@@ -108,44 +108,31 @@ class AdminController {
     }
 
     /**
-     * CRUD: Listar Entradas
+     * CRUD: Listar, Crear y Editar Entradas
      */
     public function posts(): void {
-        $this->checkAuth();
-        $posts = Post::all();
-
-        $this->render('admin/posts/index', [
-            'title' => 'Entradas - Admin Panel',
-            'posts' => $posts
-        ]);
-    }
-
-    /**
-     * CRUD: Crear Entrada
-     */
-    public function createPost(): void {
         $this->checkAuth();
         
         $error = null;
         $categories = Category::all();
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Manejar Creación
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_post'])) {
             $title = trim($_POST['title'] ?? '');
             $slug = trim($_POST['slug'] ?? '');
-            $category_id = (int)($_POST['category_id'] ?? 0);
-            $excerpt = trim($_POST['excerpt'] ?? '');
+            $categoryIdInput = $_POST['category_id'] ?? '';
+            $category_id = (!empty($categoryIdInput) && $categoryIdInput !== '0') ? (int)$categoryIdInput : null;
             $content = trim($_POST['content'] ?? '');
+            $excerpt = \App\Helpers::excerpt($content);
             $status = trim($_POST['status'] ?? 'draft');
 
-            // Autogenerar slug si está vacío
             if (empty($slug)) {
                 $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
             }
 
-            if (empty($title) || empty($content) || $category_id === 0) {
-                $error = 'Por favor, completa todos los campos requeridos.';
+            if (empty($title) || empty($content)) {
+                $error = 'Por favor, completa todos los campos requeridos (Título y Contenido).';
             } else {
-                // Subir imagen
                 $imageName = null;
                 if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] === UPLOAD_ERR_OK) {
                     $tmpName = $_FILES['featured_image']['tmp_name'];
@@ -178,102 +165,114 @@ class AdminController {
                         header("Location: /?route=admin/posts");
                         exit;
                     } else {
-                        $error = 'Ocurrió un error al crear la entrada. El slug podría estar duplicado.';
+                        $error = 'Ocurrió un error al guardar la entrada.';
                     }
                 }
             }
         }
 
-        $this->render('admin/posts/create', [
-            'title' => 'Nueva Entrada - Admin Panel',
+        // Manejar Actualización
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_post'])) {
+            $id = (int)($_POST['id'] ?? 0);
+            $post = Post::find($id);
+            if ($post) {
+                $title = trim($_POST['title'] ?? '');
+                $slug = trim($_POST['slug'] ?? '');
+                $categoryIdInput = $_POST['category_id'] ?? '';
+                $category_id = (!empty($categoryIdInput) && $categoryIdInput !== '0') ? (int)$categoryIdInput : null;
+                $content = trim($_POST['content'] ?? '');
+                $excerpt = \App\Helpers::excerpt($content);
+                $status = trim($_POST['status'] ?? 'draft');
+
+                if (empty($slug)) {
+                    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
+                }
+
+                if (empty($title) || empty($content)) {
+                    $error = 'Por favor, completa todos los campos requeridos (Título y Contenido).';
+                } else {
+                    $imageName = $post->featured_image;
+
+                    if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] === UPLOAD_ERR_OK) {
+                        $tmpName = $_FILES['featured_image']['tmp_name'];
+                        $origName = basename($_FILES['featured_image']['name']);
+                        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+                        
+                        if (in_array($ext, $allowed)) {
+                            $imageName = uniqid('post_') . '.' . $ext;
+                            $destPath = dirname(dirname(__DIR__)) . '/public/uploads/' . $imageName;
+                            move_uploaded_file($tmpName, $destPath);
+                            
+                            if ($post->featured_image && file_exists(dirname(dirname(__DIR__)) . '/public/uploads/' . $post->featured_image)) {
+                                @unlink(dirname(dirname(__DIR__)) . '/public/uploads/' . $post->featured_image);
+                            }
+                        } else {
+                            $error = 'Tipo de imagen no permitido. Solo se permiten JPG, PNG y WEBP.';
+                        }
+                    }
+
+                    if (!$error) {
+                        $success = Post::update(
+                            $post->id,
+                            $category_id,
+                            $title,
+                            $slug,
+                            $excerpt,
+                            $content,
+                            $imageName,
+                            $status
+                        );
+
+                        if ($success) {
+                            header("Location: /?route=admin/posts");
+                            exit;
+                        } else {
+                            $error = 'Ocurrió un error al actualizar la entrada.';
+                        }
+                    }
+                }
+            }
+        }
+
+        $posts = Post::all();
+
+        $this->render('admin/posts/index', [
+            'title' => 'Entradas - Admin Panel',
+            'posts' => $posts,
             'categories' => $categories,
             'error' => $error
         ]);
     }
 
     /**
-     * CRUD: Editar Entrada
+     * AJAX: Obtener datos de un post en formato JSON
      */
-    public function editPost(): void {
+    public function getPostJson(): void {
         $this->checkAuth();
         $id = (int)($_GET['id'] ?? 0);
         $post = Post::find($id);
-
-        if (!$post) {
-            header("Location: /?route=admin/posts");
-            exit;
+        header('Content-Type: application/json');
+        if ($post) {
+            echo json_encode([
+                'success' => true,
+                'post' => [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'category_id' => $post->category_id,
+                    'content' => $post->content,
+                    'featured_image' => $post->featured_image,
+                    'status' => $post->status
+                ]
+            ]);
+        } else {
+            echo json_encode(['success' => false]);
         }
-
-        $error = null;
-        $categories = Category::all();
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = trim($_POST['title'] ?? '');
-            $slug = trim($_POST['slug'] ?? '');
-            $category_id = (int)($_POST['category_id'] ?? 0);
-            $excerpt = trim($_POST['excerpt'] ?? '');
-            $content = trim($_POST['content'] ?? '');
-            $status = trim($_POST['status'] ?? 'draft');
-
-            if (empty($slug)) {
-                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
-            }
-
-            if (empty($title) || empty($content) || $category_id === 0) {
-                $error = 'Por favor, completa todos los campos requeridos.';
-            } else {
-                $imageName = $post->featured_image;
-
-                // Subir nueva imagen si se proporciona
-                if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] === UPLOAD_ERR_OK) {
-                    $tmpName = $_FILES['featured_image']['tmp_name'];
-                    $origName = basename($_FILES['featured_image']['name']);
-                    $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
-                    $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-                    
-                    if (in_array($ext, $allowed)) {
-                        $imageName = uniqid('post_') . '.' . $ext;
-                        $destPath = dirname(dirname(__DIR__)) . '/public/uploads/' . $imageName;
-                        move_uploaded_file($tmpName, $destPath);
-                        
-                        // Eliminar imagen vieja
-                        if ($post->featured_image && file_exists(dirname(dirname(__DIR__)) . '/public/uploads/' . $post->featured_image)) {
-                            @unlink(dirname(dirname(__DIR__)) . '/public/uploads/' . $post->featured_image);
-                        }
-                    } else {
-                        $error = 'Tipo de imagen no permitido. Solo se permiten JPG, PNG y WEBP.';
-                    }
-                }
-
-                if (!$error) {
-                    $success = Post::update(
-                        $post->id,
-                        $category_id,
-                        $title,
-                        $slug,
-                        $excerpt,
-                        $content,
-                        $imageName,
-                        $status
-                    );
-
-                    if ($success) {
-                        header("Location: /?route=admin/posts");
-                        exit;
-                    } else {
-                        $error = 'Ocurrió un error al actualizar la entrada. El slug podría estar duplicado.';
-                    }
-                }
-            }
-        }
-
-        $this->render('admin/posts/edit', [
-            'title' => 'Editar Entrada - Admin Panel',
-            'post' => $post,
-            'categories' => $categories,
-            'error' => $error
-        ]);
+        exit;
     }
+
+
 
     /**
      * CRUD: Eliminar Entrada
@@ -308,6 +307,8 @@ class AdminController {
             $name = trim($_POST['name'] ?? '');
             $slug = trim($_POST['slug'] ?? '');
             $description = trim($_POST['description'] ?? '');
+            $parentIdInput = $_POST['parent_id'] ?? '';
+            $parentId = (!empty($parentIdInput) && $parentIdInput !== 'none') ? (int)$parentIdInput : null;
 
             if (empty($slug)) {
                 $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name), '-'));
@@ -316,12 +317,38 @@ class AdminController {
             if (empty($name)) {
                 $error = 'El nombre de la categoría es obligatorio.';
             } else {
-                $success = Category::create($name, $slug, $description);
+                $success = Category::create($name, $slug, $description, $parentId);
                 if ($success) {
                     header("Location: /?route=admin/categories");
                     exit;
                 } else {
                     $error = 'Ocurrió un error al guardar la categoría. El nombre o slug podría estar duplicado.';
+                }
+            }
+        }
+
+        // Manejar actualización de categoría existente
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_category'])) {
+            $id = (int)($_POST['id'] ?? 0);
+            $name = trim($_POST['name'] ?? '');
+            $slug = trim($_POST['slug'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $parentIdInput = $_POST['parent_id'] ?? '';
+            $parentId = (!empty($parentIdInput) && $parentIdInput !== 'none') ? (int)$parentIdInput : null;
+
+            if (empty($slug)) {
+                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name), '-'));
+            }
+
+            if (empty($name)) {
+                $error = 'El nombre de la categoría es obligatorio.';
+            } elseif ($id > 0) {
+                $success = Category::update($id, $name, $slug, $description, $parentId);
+                if ($success) {
+                    header("Location: /?route=admin/categories");
+                    exit;
+                } else {
+                    $error = 'Ocurrió un error al actualizar la categoría. El nombre o slug podría estar duplicado.';
                 }
             }
         }
@@ -343,6 +370,33 @@ class AdminController {
         $id = (int)($_GET['id'] ?? 0);
         Category::delete($id);
         header("Location: /?route=admin/categories");
+        exit;
+    }
+
+    /**
+     * AJAX: Reordenar y reestructurar jerarquía de categorías
+     */
+    public function reorderCategories(): void {
+        $this->checkAuth();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
+            if (is_array($data)) {
+                foreach ($data as $item) {
+                    $id = (int)($item['id'] ?? 0);
+                    $parentId = isset($item['parent_id']) && $item['parent_id'] !== 'none' && $item['parent_id'] !== '' ? (int)$item['parent_id'] : null;
+                    $order = (int)($item['order'] ?? 0);
+                    if ($id > 0) {
+                        \App\Models\Category::updateParentAndOrder($id, $parentId, $order);
+                    }
+                }
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true]);
+                exit;
+            }
+        }
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false]);
         exit;
     }
 

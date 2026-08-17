@@ -8,7 +8,7 @@ use PDO;
 class Post {
     public int $id;
     public int $user_id;
-    public int $category_id;
+    public ?int $category_id = null;
     public string $title;
     public string $slug;
     public ?string $excerpt;
@@ -141,7 +141,18 @@ class Post {
      */
     public function getCategory(): Category {
         if ($this->category === null) {
-            $this->category = Category::find($this->category_id);
+            if ($this->category_id !== null && $this->category_id > 0) {
+                $this->category = Category::find($this->category_id);
+            }
+            if ($this->category === null) {
+                $uncategorized = new Category();
+                $uncategorized->id = 0;
+                $uncategorized->name = 'Sin Categoría';
+                $uncategorized->slug = 'sin-categoria';
+                $uncategorized->description = 'Posts sin categoría asignada';
+                $uncategorized->parent_id = null;
+                $this->category = $uncategorized;
+            }
         }
         return $this->category;
     }
@@ -185,7 +196,7 @@ class Post {
         $post = new self();
         $post->id = (int)$row['id'];
         $post->user_id = (int)$row['user_id'];
-        $post->category_id = (int)$row['category_id'];
+        $post->category_id = isset($row['category_id']) && $row['category_id'] !== null ? (int)$row['category_id'] : null;
         $post->title = $row['title'];
         $post->slug = $row['slug'];
         $post->excerpt = $row['excerpt'];
@@ -232,7 +243,7 @@ class Post {
     /**
      * Crea un nuevo post.
      */
-    public static function create(int $userId, int $categoryId, string $title, string $slug, ?string $excerpt, string $content, ?string $featuredImage, string $status): bool {
+    public static function create(int $userId, ?int $categoryId, string $title, string $slug, ?string $excerpt, string $content, ?string $featuredImage, string $status): bool {
         $db = Database::getConnection();
         $stmt = $db->prepare("
             INSERT INTO posts (user_id, category_id, title, slug, excerpt, content, featured_image, status) 
@@ -253,7 +264,7 @@ class Post {
     /**
      * Actualiza un post existente.
      */
-    public static function update(int $id, int $categoryId, string $title, string $slug, ?string $excerpt, string $content, ?string $featuredImage, string $status): bool {
+    public static function update(int $id, ?int $categoryId, string $title, string $slug, ?string $excerpt, string $content, ?string $featuredImage, string $status): bool {
         $db = Database::getConnection();
         $stmt = $db->prepare("
             UPDATE posts 
