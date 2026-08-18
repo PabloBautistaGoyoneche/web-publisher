@@ -35,6 +35,9 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo \App\Helpers::asset('css/styles.css'); ?>">
     
+    <!-- Prevent favicon requests & clear cached/default favicons -->
+    <link rel="icon" href="data:,">
+    
     <!-- Estilos de Identidad del Sitio Dinámicos -->
     <style>
         body {

@@ -309,6 +309,9 @@ use App\Helpers;
     
     <!-- Tailwind Styles (Compilado) -->
     <link rel="stylesheet" href="<?php echo Helpers::asset('css/styles.css'); ?>">
+    
+    <!-- Prevent favicon requests & clear cached/default favicons -->
+    <link rel="icon" href="data:,">
 
     <!-- Estilos de Identidad del Sitio Dinámicos -->
     <style>

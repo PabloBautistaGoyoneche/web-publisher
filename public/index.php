@@ -73,6 +73,9 @@ if (empty($route)) {
 
     if (empty($uriPath)) {
         $route = 'home';
+    } elseif ($uriPath === 'favicon.ico') {
+        http_response_code(204);
+        exit;
     } elseif ($uriPath === 'sitemap.xml') {
         ob_end_clean(); // Descartar y cerrar el búfer de reescritura HTML
         header("Content-Type: application/xml; charset=utf-8");
