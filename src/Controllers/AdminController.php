@@ -125,6 +125,9 @@ class AdminController {
             $content = trim($_POST['content'] ?? '');
             $excerpt = \App\Helpers::excerpt($content);
             $status = trim($_POST['status'] ?? 'draft');
+            $seo_title = isset($_POST['seo_title']) ? trim($_POST['seo_title']) : null;
+            $seo_description = isset($_POST['seo_description']) ? trim($_POST['seo_description']) : null;
+            $seo_keywords = isset($_POST['seo_keywords']) ? trim($_POST['seo_keywords']) : null;
 
             if (empty($slug)) {
                 $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
@@ -158,7 +161,10 @@ class AdminController {
                         $excerpt,
                         $content,
                         $imageName,
-                        $status
+                        $status,
+                        $seo_title,
+                        $seo_description,
+                        $seo_keywords
                     );
 
                     if ($success) {
@@ -183,6 +189,9 @@ class AdminController {
                 $content = trim($_POST['content'] ?? '');
                 $excerpt = \App\Helpers::excerpt($content);
                 $status = trim($_POST['status'] ?? 'draft');
+                $seo_title = isset($_POST['seo_title']) ? trim($_POST['seo_title']) : null;
+                $seo_description = isset($_POST['seo_description']) ? trim($_POST['seo_description']) : null;
+                $seo_keywords = isset($_POST['seo_keywords']) ? trim($_POST['seo_keywords']) : null;
 
                 if (empty($slug)) {
                     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
@@ -221,7 +230,10 @@ class AdminController {
                             $excerpt,
                             $content,
                             $imageName,
-                            $status
+                            $status,
+                            $seo_title,
+                            $seo_description,
+                            $seo_keywords
                         );
 
                         if ($success) {
@@ -263,7 +275,10 @@ class AdminController {
                     'category_id' => $post->category_id,
                     'content' => $post->content,
                     'featured_image' => $post->featured_image,
-                    'status' => $post->status
+                    'status' => $post->status,
+                    'seo_title' => $post->seo_title,
+                    'seo_description' => $post->seo_description,
+                    'seo_keywords' => $post->seo_keywords
                 ]
             ]);
         } else {
@@ -295,6 +310,54 @@ class AdminController {
     }
 
     /**
+     * CRUD: Duplicar Entrada
+     */
+    public function duplicatePost(): void {
+        $this->checkAuth();
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id > 0) {
+            $post = Post::find($id);
+            if ($post) {
+                // Generar un slug único para el duplicado
+                $baseSlug = $post->slug . '-copia';
+                $slug = $baseSlug;
+                $counter = 1;
+                
+                $db = \App\Database::getConnection();
+                $stmt = $db->prepare("SELECT COUNT(*) FROM posts WHERE slug = :slug");
+                
+                do {
+                    $stmt->execute(['slug' => $slug]);
+                    $exists = (int)$stmt->fetchColumn() > 0;
+                    if ($exists) {
+                        $slug = $baseSlug . '-' . $counter;
+                        $counter++;
+                    }
+                } while ($exists);
+
+                // Crear el post duplicado. El título será "Título (Copia)"
+                $title = $post->title . ' (Copia)';
+                
+                Post::create(
+                    $post->user_id,
+                    $post->category_id,
+                    $title,
+                    $slug,
+                    $post->excerpt,
+                    $post->content,
+                    $post->featured_image,
+                    'draft', // Por seguridad y UX, se crea como Borrador
+                    $post->seo_title ? $post->seo_title . ' (Copia)' : null,
+                    $post->seo_description,
+                    $post->seo_keywords
+                );
+            }
+        }
+        header("Location: /?route=admin/posts");
+        exit;
+    }
+
+    /**
      * CRUD: Gestionar Categorías (Lista y Creación en una sola pantalla)
      */
     public function categories(): void {
@@ -309,6 +372,14 @@ class AdminController {
             $description = trim($_POST['description'] ?? '');
             $parentIdInput = $_POST['parent_id'] ?? '';
             $parentId = (!empty($parentIdInput) && $parentIdInput !== 'none') ? (int)$parentIdInput : null;
+
+            // Evitar anidamiento de 3 niveles en el backend (colapsar a abuelo)
+            if ($parentId !== null) {
+                $parentCategory = Category::find($parentId);
+                if ($parentCategory && $parentCategory->parent_id !== null) {
+                    $parentId = $parentCategory->parent_id;
+                }
+            }
 
             if (empty($slug)) {
                 $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name), '-'));
@@ -335,6 +406,14 @@ class AdminController {
             $description = trim($_POST['description'] ?? '');
             $parentIdInput = $_POST['parent_id'] ?? '';
             $parentId = (!empty($parentIdInput) && $parentIdInput !== 'none') ? (int)$parentIdInput : null;
+
+            // Evitar anidamiento de 3 niveles en el backend (colapsar a abuelo)
+            if ($parentId !== null) {
+                $parentCategory = Category::find($parentId);
+                if ($parentCategory && $parentCategory->parent_id !== null) {
+                    $parentId = $parentCategory->parent_id;
+                }
+            }
 
             if (empty($slug)) {
                 $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name), '-'));
@@ -387,6 +466,13 @@ class AdminController {
                     $parentId = isset($item['parent_id']) && $item['parent_id'] !== 'none' && $item['parent_id'] !== '' ? (int)$item['parent_id'] : null;
                     $order = (int)($item['order'] ?? 0);
                     if ($id > 0) {
+                        // Evitar anidamiento de 3 niveles en el backend (colapsar a abuelo)
+                        if ($parentId !== null) {
+                            $parentCategory = Category::find($parentId);
+                            if ($parentCategory && $parentCategory->parent_id !== null) {
+                                $parentId = $parentCategory->parent_id;
+                            }
+                        }
                         \App\Models\Category::updateParentAndOrder($id, $parentId, $order);
                     }
                 }

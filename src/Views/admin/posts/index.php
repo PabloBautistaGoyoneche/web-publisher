@@ -106,6 +106,11 @@ require __DIR__ . '/../layout/header.php';
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                     </button>
 
+                                    <!-- Duplicar -->
+                                    <a href="/?route=admin/posts/duplicate&id=<?php echo $post->id; ?>" class="p-2 text-slate-400 hover:text-brand-500 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-block" title="Duplicar entrada">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
+                                    </a>
+
                                     <!-- Eliminar -->
                                     <a href="/?route=admin/posts/delete&id=<?php echo $post->id; ?>" onclick="return confirm('¿Seguro que deseas eliminar permanentemente esta entrada? Todas sus vistas y comentarios se perderán.');" class="p-2 text-slate-400 hover:text-red-500 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-block" title="Eliminar entrada">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -133,7 +138,7 @@ require __DIR__ . '/../layout/header.php';
 
 <!-- Modal de Entrada Reorganizado con Pestañas (Post Modal) -->
 <div id="post-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 overflow-y-auto py-8">
-    <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden transform scale-95 opacity-0 transition-all duration-200 my-auto" id="post-modal-card">
+    <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden transform scale-95 opacity-0 transition-all duration-200 my-auto flex flex-col" style="height: 80vh; max-height: 80vh;" id="post-modal-card">
         
         <!-- Cabecera del Modal -->
         <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/30">
@@ -143,32 +148,22 @@ require __DIR__ . '/../layout/header.php';
             </button>
         </div>
         
-        <!-- Formulario Multipart -->
-        <form action="/?route=admin/posts" method="POST" enctype="multipart/form-data" class="p-6">
+        <!-- Formulario -->
+        <form action="/?route=admin/posts" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; flex-grow: 1; min-height: 0;">
             <input type="hidden" id="modal-post-id" name="id" value="">
             
-            <!-- Barra de Pestañas (Tabs Header) -->
-            <div class="flex border-b border-slate-200/60 dark:border-slate-800 gap-6 mb-6">
-                <button type="button" id="tab-btn-content" onclick="switchPostTab('content')" class="pb-3 text-sm font-bold border-b-2 border-brand-500 text-brand-600 dark:text-brand-400 focus:outline-none transition-all flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                    Contenido
-                </button>
-                <button type="button" id="tab-btn-settings" onclick="switchPostTab('settings')" class="pb-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none transition-all flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    Ajustes
-                </button>
-                <button type="button" id="tab-btn-seo" onclick="switchPostTab('seo')" class="pb-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none transition-all flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                    SEO (Vista Previa)
-                </button>
-            </div>
-            
-            <!-- Panel 1: Contenido -->
-            <div id="tab-panel-content" class="space-y-6">
+            <!-- Cuerpo del Formulario (Desplazable) -->
+            <div class="p-6 space-y-6" style="overflow-y: auto; max-height: calc(80vh - 140px); flex-grow: 1;">
                 <!-- Título -->
                 <div class="space-y-2">
                     <label for="modal-post-title" class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Título de la Entrada *</label>
-                    <input type="text" id="modal-post-title" name="title" required placeholder="Ingresa el título del post..." class="w-full px-4 py-3 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none transition-colors text-slate-800 dark:text-slate-100">
+                    <input type="text" id="modal-post-title" name="title" required maxlength="60" placeholder="Ingresa el título del post..." class="w-full px-4 py-3 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none transition-colors text-slate-800 dark:text-slate-100">
+                </div>
+
+                <!-- Enlace Permanente (Slug) -->
+                <div class="space-y-2">
+                    <label for="modal-post-slug" class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Enlace Permanente (Slug)</label>
+                    <input type="text" id="modal-post-slug" name="slug" placeholder="mi-enlace-permanente" class="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none transition-colors text-slate-800 dark:text-slate-100">
                 </div>
 
                 <!-- Contenido (Editor) -->
@@ -177,95 +172,99 @@ require __DIR__ . '/../layout/header.php';
                     <p class="text-[10px] text-slate-400">Puedes usar etiquetas HTML o Markdown simple.</p>
                     <textarea id="modal-post-content" name="content" required rows="10" placeholder="Escribe el contenido completo del artículo aquí..." class="w-full px-4 py-3 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none transition-colors font-mono text-slate-800 dark:text-slate-100"></textarea>
                 </div>
-            </div>
-            
-            <!-- Panel 2: Ajustes -->
-            <div id="tab-panel-settings" class="hidden space-y-5">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Columna 1 de Ajustes -->
-                    <div class="space-y-4">
-                        <!-- Estado -->
-                        <div class="space-y-2">
-                            <label for="modal-post-status" class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Estado</label>
-                            <select id="modal-post-status" name="status" class="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none text-slate-700 dark:text-slate-300">
-                                <option value="published">Publicado</option>
-                                <option value="draft">Borrador</option>
-                            </select>
-                        </div>
 
-                        <!-- Enlace Permanente (Slug) -->
-                        <div class="space-y-2">
-                            <label for="modal-post-slug" class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Enlace Permanente (Slug)</label>
-                            <input type="text" id="modal-post-slug" name="slug" placeholder="mi-enlace-permanente" class="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none transition-colors text-slate-800 dark:text-slate-100">
-                        </div>
-
-                        <!-- Categoría -->
-                        <div class="space-y-2">
-                            <label for="modal-post-category" class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Categoría</label>
-                            <select id="modal-post-category" name="category_id" class="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none text-slate-700 dark:text-slate-300">
-                                <option value="0">Sin Categoría (Opcional)</option>
-                                <?php foreach($categories as $cat): ?>
-                                    <option value="<?php echo $cat->id; ?>"><?php echo htmlspecialchars($cat->name); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <!-- Columna 2 de Ajustes: Imagen Destacada -->
-                    <div class="space-y-3">
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Imagen Destacada</label>
-                        <p class="text-[10px] text-slate-400 font-medium">Formatos permitidos: JPG, PNG, WEBP.</p>
-                        <input type="file" id="modal-post-image-input" name="featured_image" accept="image/*" class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer w-full">
-                        
-                        <!-- Contenedor Vista Previa -->
-                        <div id="modal-post-image-preview-container" class="hidden aspect-video w-full rounded-2xl bg-slate-100 dark:bg-slate-900 overflow-hidden border border-slate-200/50 dark:border-slate-800/80 relative">
-                            <img id="modal-post-image-preview" src="#" alt="Vista previa" class="w-full h-full object-cover">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Panel 3: SEO Vista Previa -->
-            <div id="tab-panel-seo" class="hidden space-y-6">
-                <div class="space-y-4">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Previsualización en Buscadores (Google Snippet)</h4>
-                    
-                    <!-- Tarjeta Google Mockup -->
-                    <div class="bg-white border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-inner font-sans space-y-1.5 dark:bg-slate-900/40">
-                        <!-- URL del Sitio -->
-                        <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
-                            <span class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px] text-slate-600 dark:text-slate-300">Artículo</span>
-                            <span><?php echo $_SERVER['HTTP_HOST'] ?? 'localhost:8000'; ?>/articulo/<span id="seo-preview-slug" class="font-medium text-slate-700 dark:text-slate-200">mi-entrada</span></span>
-                        </div>
-                        
-                        <!-- Meta Título -->
-                        <h3 id="seo-preview-title" class="text-[19px] font-medium text-[#1a0dab] dark:text-[#8ab4f8] hover:underline cursor-pointer leading-tight truncate">
-                            Mi Título de la Entrada
-                        </h3>
-                        
-                        <!-- Meta Descripción -->
-                        <p id="seo-preview-desc" class="text-xs text-[#4d5156] dark:text-[#bdc1c6] leading-relaxed break-words">
-                            Escribe contenido en el cuerpo del artículo para ver la previsualización del extracto de descripción de Google...
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Palabras Clave -->
-                <div class="space-y-3">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
-                        <span>Palabras Clave Extraídas (Automático)</span>
-                        <span class="text-[10px] text-slate-400 font-normal">Hasta 15 palabras clave</span>
+                <!-- Clasificación y Portada -->
+                <div class="border-t border-slate-100 dark:border-slate-800 pt-5 mt-5">
+                    <h4 class="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        Clasificación y Portada
                     </h4>
                     
-                    <!-- Contenedor de Palabras Clave Tags -->
-                    <div id="seo-preview-keywords-container" class="flex flex-wrap gap-2 min-h-12 p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80 rounded-2xl">
-                        <span class="text-xs text-slate-400 italic">Escribe título y contenido para ver las palabras clave...</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <!-- Columna 1: Estado y Categoría -->
+                        <div class="space-y-4">
+                            <div class="space-y-2">
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Estado</label>
+                                <input type="hidden" id="modal-post-status" name="status" value="published">
+                                <div class="flex items-center gap-3 pt-1">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="modal-post-status-toggle" class="sr-only peer" onchange="togglePostStatus(this)">
+                                        <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-brand-500"></div>
+                                    </label>
+                                    <span id="modal-post-status-label" class="text-sm font-semibold text-slate-700 dark:text-slate-300">Publicado</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label for="modal-post-category" class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Categoría</label>
+                                <select id="modal-post-category" name="category_id" class="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none text-slate-700 dark:text-slate-300">
+                                    <option value="0">Sin Categoría (Opcional)</option>
+                                    <?php 
+                                    $parents = [];
+                                    $children = [];
+                                    foreach($categories as $cat) {
+                                        if ($cat->parent_id === null) {
+                                            $parents[] = $cat;
+                                        } else {
+                                            $children[$cat->parent_id][] = $cat;
+                                        }
+                                    }
+                                    foreach($parents as $parent): 
+                                    ?>
+                                        <option value="<?php echo $parent->id; ?>"><?php echo htmlspecialchars($parent->name); ?></option>
+                                        <?php if (isset($children[$parent->id])): ?>
+                                            <?php foreach($children[$parent->id] as $child): ?>
+                                                <option value="<?php echo $child->id; ?>">&nbsp;&nbsp;&nbsp;&nbsp;↳ <?php echo htmlspecialchars($child->name); ?></option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Columna 2: Imagen Destacada -->
+                        <div class="space-y-3">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Imagen Destacada</label>
+                            <p class="text-[10px] text-slate-400 font-medium">Formatos permitidos: JPG, PNG, WEBP.</p>
+                            <input type="file" id="modal-post-image-input" name="featured_image" accept="image/*" class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer w-full">
+                            
+                            <!-- Contenedor Vista Previa -->
+                            <div id="modal-post-image-preview-container" class="hidden aspect-video w-full rounded-2xl bg-slate-100 dark:bg-slate-900 overflow-hidden border border-slate-200/50 dark:border-slate-800/80 relative">
+                                <img id="modal-post-image-preview" src="#" alt="Vista previa" class="w-full h-full object-cover">
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Sección SEO Integrada -->
+                <div class="border-t border-slate-100 dark:border-slate-800 pt-5 mt-5">
+                    <h4 class="text-xs font-extrabold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Optimización SEO (Opcional)
+                    </h4>
+                </div>
+
+                <!-- Meta Título SEO -->
+                <div class="space-y-2">
+                    <label for="modal-post-seo-title" class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Meta Título SEO</label>
+                    <input type="text" id="modal-post-seo-title" name="seo_title" maxlength="60" placeholder="Meta título personalizado para buscadores (sugerido: máx 60 caracteres)..." class="w-full px-4 py-3 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none transition-colors text-slate-800 dark:text-slate-100">
+                </div>
+
+                <!-- Meta Descripción SEO -->
+                <div class="space-y-2">
+                    <label for="modal-post-seo-description" class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Meta Descripción SEO</label>
+                    <textarea id="modal-post-seo-description" name="seo_description" maxlength="155" rows="3" placeholder="Descripción resumida para buscadores (sugerido: máx 155 caracteres)..." class="w-full px-4 py-3 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none transition-colors text-slate-800 dark:text-slate-100"></textarea>
+                </div>
+
+                <!-- Meta Palabras Clave -->
+                <div class="space-y-2">
+                    <label for="modal-post-seo-keywords" class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Palabras Clave (Separadas por comas)</label>
+                    <input type="text" id="modal-post-seo-keywords" name="seo_keywords" placeholder="ejemplo, blog, tecnología, desarrollo" class="w-full px-4 py-3 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none transition-colors text-slate-800 dark:text-slate-100">
                 </div>
             </div>
 
-            <!-- Botones de Acción -->
-            <div class="pt-5 mt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+            <!-- Botones de Acción (Fijos en la base) -->
+            <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-900/30">
                 <button type="button" onclick="closePostModal()" class="px-5 py-2.5 rounded-xl font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 active:scale-95 transition-all text-sm">Cancelar</button>
                 <button type="submit" id="modal-post-submit-btn" name="create_post" class="btn-primary py-2.5 px-6 text-sm font-semibold rounded-xl shadow-md">
                     Guardar
@@ -276,7 +275,7 @@ require __DIR__ . '/../layout/header.php';
     </div>
 </div>
 
-<!-- Scripts de control del Modal y Vista previa -->
+<!-- Scripts de control del Modal -->
 <script>
     const modal = document.getElementById('post-modal');
     const modalCard = document.getElementById('post-modal-card');
@@ -291,6 +290,58 @@ require __DIR__ . '/../layout/header.php';
     const modalImagePreviewContainer = document.getElementById('modal-post-image-preview-container');
     const modalImagePreview = document.getElementById('modal-post-image-preview');
     const modalSubmitBtn = document.getElementById('modal-post-submit-btn');
+
+    const modalPostSeoTitle = document.getElementById('modal-post-seo-title');
+    const modalPostSeoDescription = document.getElementById('modal-post-seo-description');
+    const modalPostSeoKeywords = document.getElementById('modal-post-seo-keywords');
+
+    const modalPostStatusToggle = document.getElementById('modal-post-status-toggle');
+
+    let userManuallyEditedSlug = false;
+    let userManuallyEditedSeoTitle = false;
+    let userManuallyEditedSeoDesc = false;
+
+    function generateSlug(text) {
+        return text.toLowerCase()
+            .trim()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/[\s_]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
+    function generateSeoDescription(text) {
+        // Eliminar HTML tags
+        let clean = text.replace(/<[^>]*>/g, '');
+        // Eliminar Markdown de enlaces/imágenes
+        clean = clean.replace(/!\[.*?\]\(.*?\)/g, '');
+        clean = clean.replace(/\[(.*?)\]\(.*?\)/g, '$1');
+        // Eliminar Markdown de títulos y estilos
+        clean = clean.replace(/^[#\s=*-]+/gm, '');
+        clean = clean.replace(/[*_`~]/g, '');
+        // Normalizar espacios en blanco
+        clean = clean.replace(/\s+/g, ' ').trim();
+        // Truncar a 155 caracteres
+        if (clean.length > 155) {
+            clean = clean.substring(0, 152) + '...';
+        }
+        return clean;
+    }
+
+    function togglePostStatus(checkbox) {
+        const hiddenInput = document.getElementById('modal-post-status');
+        const label = document.getElementById('modal-post-status-label');
+        if (checkbox.checked) {
+            hiddenInput.value = 'published';
+            label.textContent = 'Publicado';
+            label.className = 'text-sm font-semibold text-slate-700 dark:text-slate-300';
+        } else {
+            hiddenInput.value = 'draft';
+            label.textContent = 'Borrador';
+            label.className = 'text-sm font-semibold text-slate-400 dark:text-slate-500';
+        }
+    }
 
     function openPostModal() {
         modal.classList.remove('hidden');
@@ -315,170 +366,19 @@ require __DIR__ . '/../layout/header.php';
         }
     }
 
-    function switchPostTab(tab) {
-        const btnContent = document.getElementById('tab-btn-content');
-        const btnSettings = document.getElementById('tab-btn-settings');
-        const btnSeo = document.getElementById('tab-btn-seo');
-        const panelContent = document.getElementById('tab-panel-content');
-        const panelSettings = document.getElementById('tab-panel-settings');
-        const panelSeo = document.getElementById('tab-panel-seo');
-        
-        // Contenido
-        if (tab === 'content') {
-            btnContent.classList.add('border-brand-500', 'text-brand-600', 'dark:text-brand-400', 'font-bold');
-            btnContent.classList.remove('border-transparent', 'text-slate-400', 'font-medium');
-            
-            btnSettings.classList.remove('border-brand-500', 'text-brand-600', 'dark:text-brand-400', 'font-bold');
-            btnSettings.classList.add('border-transparent', 'text-slate-400', 'font-medium');
-            
-            btnSeo.classList.remove('border-brand-500', 'text-brand-600', 'dark:text-brand-400', 'font-bold');
-            btnSeo.classList.add('border-transparent', 'text-slate-400', 'font-medium');
-            
-            panelContent.classList.remove('hidden');
-            panelSettings.classList.add('hidden');
-            panelSeo.classList.add('hidden');
-        } 
-        // Ajustes
-        else if (tab === 'settings') {
-            btnSettings.classList.add('border-brand-500', 'text-brand-600', 'dark:text-brand-400', 'font-bold');
-            btnSettings.classList.remove('border-transparent', 'text-slate-400', 'font-medium');
-            
-            btnContent.classList.remove('border-brand-500', 'text-brand-600', 'dark:text-brand-400', 'font-bold');
-            btnContent.classList.add('border-transparent', 'text-slate-400', 'font-medium');
-            
-            btnSeo.classList.remove('border-brand-500', 'text-brand-600', 'dark:text-brand-400', 'font-bold');
-            btnSeo.classList.add('border-transparent', 'text-slate-400', 'font-medium');
-            
-            panelSettings.classList.remove('hidden');
-            panelContent.classList.add('hidden');
-            panelSeo.classList.add('hidden');
-        }
-        // SEO Preview
-        else if (tab === 'seo') {
-            btnSeo.classList.add('border-brand-500', 'text-brand-600', 'dark:text-brand-400', 'font-bold');
-            btnSeo.classList.remove('border-transparent', 'text-slate-400', 'font-medium');
-            
-            btnContent.classList.remove('border-brand-500', 'text-brand-600', 'dark:text-brand-400', 'font-bold');
-            btnContent.classList.add('border-transparent', 'text-slate-400', 'font-medium');
-            
-            btnSettings.classList.remove('border-brand-500', 'text-brand-600', 'dark:text-brand-400', 'font-bold');
-            btnSettings.classList.add('border-transparent', 'text-slate-400', 'font-medium');
-            
-            panelSeo.classList.remove('hidden');
-            panelContent.classList.add('hidden');
-            panelSettings.classList.add('hidden');
-        }
-    }
-
-    function updateSeoPreview() {
-        const titleVal = modalPostTitle.value.trim();
-        const contentVal = modalPostContent.value.trim();
-        const slugVal = modalPostSlug.value.trim();
-
-        // 1. Meta Título
-        const seoPreviewTitle = document.getElementById('seo-preview-title');
-        if (titleVal) {
-            if (titleVal.length > 60) {
-                seoPreviewTitle.textContent = titleVal.substring(0, 57) + '...';
-            } else {
-                seoPreviewTitle.textContent = titleVal;
-            }
-        } else {
-            seoPreviewTitle.textContent = "Mi Título de la Entrada";
-        }
-
-        // 2. Slug
-        const seoPreviewSlug = document.getElementById('seo-preview-slug');
-        seoPreviewSlug.textContent = slugVal ? slugVal : (titleVal ? titleVal.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'mi-entrada');
-
-        // 3. Meta Descripción
-        const seoPreviewDesc = document.getElementById('seo-preview-desc');
-        // Limpiar HTML
-        let cleanText = contentVal.replace(/<\/?[^>]+(>|$)/g, ""); 
-        cleanText = cleanText.replace(/\s+/g, ' ').trim();
-        
-        if (cleanText) {
-            if (cleanText.length > 155) {
-                seoPreviewDesc.textContent = cleanText.substring(0, 152) + '...';
-            } else {
-                if (cleanText.length > 152) {
-                    seoPreviewDesc.textContent = cleanText.substring(0, 152) + '...';
-                } else {
-                    seoPreviewDesc.textContent = cleanText;
-                }
-            }
-        } else {
-            seoPreviewDesc.textContent = "Escribe contenido en el cuerpo del artículo para ver la previsualización del extracto de descripción de Google...";
-        }
-
-        // 4. Palabras Clave
-        const keywordsContainer = document.getElementById('seo-preview-keywords-container');
-        let keywordsList = [];
-
-        // Palabras del título
-        if (titleVal) {
-            let titleClean = titleVal.toLowerCase().replace(/[^a-záéíóúüñ\s]/g, '');
-            let titleWords = titleClean.split(/\s+/);
-            titleWords.forEach(w => {
-                if (w.length >= 4) keywordsList.push(w);
-            });
-        }
-
-        // Palabras del contenido
-        const stopWords = [
-            'para', 'como', 'este', 'esta', 'estos', 'estas', 'todo', 'toda', 'todos', 'todas', 
-            'sobre', 'entre', 'desde', 'hasta', 'hacia', 'donde', 'cuando', 'quien', 'cual', 'cuyo', 
-            'pero', 'sino', 'porque', 'pues', 'aunque', 'tambien', 'tampoco', 'luego', 'despues', 
-            'antes', 'ahora', 'mientras', 'durante', 'contra', 'segundo', 'primero', 'suyo', 'suya', 
-            'suyos', 'suyas', 'nuestro', 'nuestra', 'nuestros', 'nuestras', 'vuestro', 'vuestra', 
-            'vuestros', 'vuestras', 'con', 'sin', 'por', 'del', 'los', 'las', 'una', 'uno', 'unos', 
-            'unas', 'sus', 'ese', 'esa', 'esos', 'esas', 'muy', 'mas', 'bien', 'mal', 'siempre', 
-            'nunca', 'jamas', 'tal', 'tales', 'otro', 'otra', 'otros', 'otras', 'algun', 'alguna', 
-            'algunos', 'algunas', 'ningun', 'ninguna', 'ningunos', 'ningunas', 'cada', 'ambos', 'ambas', 
-            'mucho', 'mucha', 'muchos', 'muchas', 'poco', 'poca', 'pocos', 'pocas', 'tanto', 'tanta', 
-            'tantos', 'tantas', 'demas', 'mismo', 'misma', 'mismos', 'mismas', 'propio', 'propia', 
-            'propios', 'propias', 'tiene', 'tienen', 'hacer', 'puede', 'pueden', 'crear', 'nuevo', 'nueva'
-        ];
-
-        if (cleanText) {
-            let contentClean = cleanText.toLowerCase().replace(/[^a-záéíóúüñ\s]/g, '');
-            let contentWords = contentClean.split(/\s+/);
-            let wordCounts = {};
-
-            contentWords.forEach(w => {
-                if (w.length >= 4 && !stopWords.includes(w)) {
-                    wordCounts[w] = (wordCounts[w] || 0) + 1;
-                }
-            });
-
-            let sortedWords = Object.keys(wordCounts).sort((a, b) => wordCounts[b] - wordCounts[a]);
-            let topContentWords = sortedWords.slice(0, 10);
-            keywordsList = keywordsList.concat(topContentWords);
-        }
-
-        keywordsList = [...new Set(keywordsList)];
-        keywordsList = keywordsList.slice(0, 15);
-
-        keywordsContainer.innerHTML = "";
-        if (keywordsList.length > 0) {
-            keywordsList.forEach(k => {
-                const badge = document.createElement('span');
-                badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-100 dark:border-brand-900/40";
-                badge.textContent = k;
-                keywordsContainer.appendChild(badge);
-            });
-        } else {
-            keywordsContainer.innerHTML = `<span class="text-xs text-slate-400 italic">Escribe título y contenido para ver las palabras clave...</span>`;
-        }
-    }
-
     function openCreatePostModal() {
-        switchPostTab('content');
+        userManuallyEditedSlug = false;
+        userManuallyEditedSeoTitle = false;
+        userManuallyEditedSeoDesc = false;
         modalTitle.textContent = "Nueva Entrada";
         modalId.value = "";
         modalPostTitle.value = "";
         modalPostContent.value = "";
         modalPostStatus.value = "published";
+        if (modalPostStatusToggle) {
+            modalPostStatusToggle.checked = true;
+            togglePostStatus(modalPostStatusToggle);
+        }
         modalPostSlug.value = "";
         modalPostCategory.value = "0";
         modalImageInput.value = "";
@@ -488,12 +388,18 @@ require __DIR__ . '/../layout/header.php';
         modalSubmitBtn.name = "create_post";
         modalSubmitBtn.textContent = "Guardar Entrada";
         
-        updateSeoPreview();
+        // Limpiar nuevos campos SEO
+        modalPostSeoTitle.value = "";
+        modalPostSeoDescription.value = "";
+        modalPostSeoKeywords.value = "";
+        
         openPostModal();
     }
 
     function openEditPostModal(id) {
-        switchPostTab('content');
+        userManuallyEditedSlug = false;
+        userManuallyEditedSeoTitle = false;
+        userManuallyEditedSeoDesc = false;
         modalTitle.textContent = "Cargando...";
         openPostModal();
 
@@ -507,6 +413,10 @@ require __DIR__ . '/../layout/header.php';
                     modalPostTitle.value = post.title;
                     modalPostContent.value = post.content;
                     modalPostStatus.value = post.status;
+                    if (modalPostStatusToggle) {
+                        modalPostStatusToggle.checked = (post.status === 'published');
+                        togglePostStatus(modalPostStatusToggle);
+                    }
                     modalPostSlug.value = post.slug;
                     modalPostCategory.value = post.category_id ? post.category_id : "0";
                     modalImageInput.value = "";
@@ -522,7 +432,15 @@ require __DIR__ . '/../layout/header.php';
                         modalImagePreviewContainer.classList.add('hidden');
                         modalImagePreview.setAttribute('src', '#');
                     }
-                    updateSeoPreview();
+                    
+                    // Asignar nuevos campos SEO
+                    modalPostSeoTitle.value = post.seo_title ? post.seo_title : "";
+                    modalPostSeoDescription.value = post.seo_description ? post.seo_description : "";
+                    modalPostSeoKeywords.value = post.seo_keywords ? post.seo_keywords : "";
+
+                    // Determinar si ya fueron editados manualmente antes de abrir
+                    userManuallyEditedSeoTitle = (post.seo_title && post.seo_title !== post.title);
+                    userManuallyEditedSeoDesc = (post.seo_description && post.seo_description !== generateSeoDescription(post.content));
                 } else {
                     alert("Error al cargar la entrada.");
                     closePostModal();
@@ -536,22 +454,54 @@ require __DIR__ . '/../layout/header.php';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        if (modalPostTitle && modalPostContent && modalPostSlug) {
+        if (modalPostTitle && modalPostSlug) {
             modalPostTitle.addEventListener('input', () => {
-                if (modalSubmitBtn.name === "create_post") {
-                    let slug = modalPostTitle.value.toLowerCase()
-                        .trim()
-                        .normalize('NFD')
-                        .replace(/[\u0300-\u036f]/g, '')
-                        .replace(/[^a-z0-9\s-]/g, '')
-                        .replace(/[\s_]+/g, '-')
-                        .replace(/^-+|-+$/g, '');
-                    modalPostSlug.value = slug;
+                if (!userManuallyEditedSlug) {
+                    modalPostSlug.value = generateSlug(modalPostTitle.value);
                 }
-                updateSeoPreview();
+                if (!userManuallyEditedSeoTitle && modalPostSeoTitle) {
+                    modalPostSeoTitle.value = modalPostTitle.value;
+                }
             });
-            modalPostContent.addEventListener('input', updateSeoPreview);
-            modalPostSlug.addEventListener('input', updateSeoPreview);
+
+            modalPostSlug.addEventListener('input', () => {
+                if (modalPostSlug.value.trim() === '') {
+                    userManuallyEditedSlug = false;
+                    modalPostSlug.value = generateSlug(modalPostTitle.value);
+                } else {
+                    userManuallyEditedSlug = true;
+                }
+            });
+        }
+
+        if (modalPostSeoTitle) {
+            modalPostSeoTitle.addEventListener('input', () => {
+                if (modalPostSeoTitle.value.trim() === '') {
+                    userManuallyEditedSeoTitle = false;
+                    modalPostSeoTitle.value = modalPostTitle.value;
+                } else {
+                    userManuallyEditedSeoTitle = true;
+                }
+            });
+        }
+
+        if (modalPostContent && modalPostSeoDescription) {
+            modalPostContent.addEventListener('input', () => {
+                if (!userManuallyEditedSeoDesc) {
+                    modalPostSeoDescription.value = generateSeoDescription(modalPostContent.value);
+                }
+            });
+        }
+
+        if (modalPostSeoDescription) {
+            modalPostSeoDescription.addEventListener('input', () => {
+                if (modalPostSeoDescription.value.trim() === '') {
+                    userManuallyEditedSeoDesc = false;
+                    modalPostSeoDescription.value = generateSeoDescription(modalPostContent.value);
+                } else {
+                    userManuallyEditedSeoDesc = true;
+                }
+            });
         }
 
         if (modalImageInput && modalImagePreviewContainer && modalImagePreview) {

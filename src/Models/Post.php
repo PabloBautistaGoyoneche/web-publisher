@@ -18,6 +18,9 @@ class Post {
     public int $views_count;
     public string $created_at;
     public string $updated_at;
+    public ?string $seo_title = null;
+    public ?string $seo_description = null;
+    public ?string $seo_keywords = null;
 
     // Cache instances to avoid multiple queries
     private ?User $author = null;
@@ -204,6 +207,9 @@ class Post {
         $post->featured_image = $row['featured_image'];
         $post->status = $row['status'];
         $post->views_count = (int)$row['views_count'];
+        $post->seo_title = $row['seo_title'] ?? null;
+        $post->seo_description = $row['seo_description'] ?? null;
+        $post->seo_keywords = $row['seo_keywords'] ?? null;
         $post->created_at = $row['created_at'];
         $post->updated_at = $row['updated_at'];
         return $post;
@@ -243,11 +249,23 @@ class Post {
     /**
      * Crea un nuevo post.
      */
-    public static function create(int $userId, ?int $categoryId, string $title, string $slug, ?string $excerpt, string $content, ?string $featuredImage, string $status): bool {
+    public static function create(
+        int $userId, 
+        ?int $categoryId, 
+        string $title, 
+        string $slug, 
+        ?string $excerpt, 
+        string $content, 
+        ?string $featuredImage, 
+        string $status,
+        ?string $seoTitle = null,
+        ?string $seoDescription = null,
+        ?string $seoKeywords = null
+    ): bool {
         $db = Database::getConnection();
         $stmt = $db->prepare("
-            INSERT INTO posts (user_id, category_id, title, slug, excerpt, content, featured_image, status) 
-            VALUES (:user_id, :category_id, :title, :slug, :excerpt, :content, :featured_image, :status)
+            INSERT INTO posts (user_id, category_id, title, slug, excerpt, content, featured_image, status, seo_title, seo_description, seo_keywords) 
+            VALUES (:user_id, :category_id, :title, :slug, :excerpt, :content, :featured_image, :status, :seo_title, :seo_description, :seo_keywords)
         ");
         return $stmt->execute([
             'user_id' => $userId,
@@ -257,14 +275,29 @@ class Post {
             'excerpt' => $excerpt,
             'content' => $content,
             'featured_image' => $featuredImage,
-            'status' => $status
+            'status' => $status,
+            'seo_title' => $seoTitle,
+            'seo_description' => $seoDescription,
+            'seo_keywords' => $seoKeywords
         ]);
     }
 
     /**
      * Actualiza un post existente.
      */
-    public static function update(int $id, ?int $categoryId, string $title, string $slug, ?string $excerpt, string $content, ?string $featuredImage, string $status): bool {
+    public static function update(
+        int $id, 
+        ?int $categoryId, 
+        string $title, 
+        string $slug, 
+        ?string $excerpt, 
+        string $content, 
+        ?string $featuredImage, 
+        string $status,
+        ?string $seoTitle = null,
+        ?string $seoDescription = null,
+        ?string $seoKeywords = null
+    ): bool {
         $db = Database::getConnection();
         $stmt = $db->prepare("
             UPDATE posts 
@@ -274,7 +307,10 @@ class Post {
                 excerpt = :excerpt, 
                 content = :content, 
                 featured_image = :featured_image, 
-                status = :status 
+                status = :status,
+                seo_title = :seo_title,
+                seo_description = :seo_description,
+                seo_keywords = :seo_keywords
             WHERE id = :id
         ");
         return $stmt->execute([
@@ -285,7 +321,10 @@ class Post {
             'excerpt' => $excerpt,
             'content' => $content,
             'featured_image' => $featuredImage,
-            'status' => $status
+            'status' => $status,
+            'seo_title' => $seoTitle,
+            'seo_description' => $seoDescription,
+            'seo_keywords' => $seoKeywords
         ]);
     }
 

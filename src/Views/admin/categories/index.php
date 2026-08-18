@@ -59,6 +59,10 @@ require __DIR__ . '/../layout/header.php';
         background-color: rgb(var(--brand-50)) !important;
         border: 2px dashed rgb(var(--brand-500)) !important;
     }
+    /* Ocultar el contenedor de subcategorías para elementos que ya son subcategorías (nivel 2) */
+    .category-list-nested:not([data-parent-id="none"]) .subcategory-wrapper {
+        display: none !important;
+    }
 </style>
 
 <!-- Listado de Categorías Jerárquicas -->
@@ -120,7 +124,7 @@ require __DIR__ . '/../layout/header.php';
                         
                         <!-- Lista anidada de subcategorías (solo se renderiza para el primer nivel para forzar un máximo de 2 niveles) -->
                         <?php if ($depth < 2): ?>
-                            <div class="bg-slate-50/10 dark:bg-slate-900/5 border-t border-slate-100/50 dark:border-slate-800/20 pl-6 pb-2">
+                            <div class="subcategory-wrapper bg-slate-50/10 dark:bg-slate-900/5 border-t border-slate-100/50 dark:border-slate-800/20 pl-6 pb-2">
                                 <?php renderCategoryTree($categories, $cat->id, $depth + 1); ?>
                             </div>
                         <?php endif; ?>
@@ -319,6 +323,17 @@ require __DIR__ . '/../layout/header.php';
                     const hasChildren = evt.dragged.querySelector('.category-item') !== null;
                     if (hasChildren && !isTargetRoot) {
                         return false; // Cancela el preview de la posición de drop
+                    }
+
+                    // Evitar anidamiento de tercer nivel (nieto)
+                    if (!isTargetRoot) {
+                        const targetParentItem = evt.to.closest('.category-item');
+                        if (targetParentItem) {
+                            const targetGrandparentItem = targetParentItem.parentElement.closest('.category-item');
+                            if (targetGrandparentItem) {
+                                return false; // Cancela si se intenta colocar como nieto
+                            }
+                        }
                     }
                 },
                 onEnd: function() {

@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /admin
+
+# URL del Sitemap de tu blog (reemplazar por tu dominio en producción)
+Sitemap: http://localhost:8000/sitemap.xml

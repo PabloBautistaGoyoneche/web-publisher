@@ -32,80 +32,280 @@ use App\Helpers;
     $seoKeywords = 'tecnologia, blog, programacion, desarrollo web';
     
     if (isset($post) && $post instanceof \App\Models\Post) {
-        // Meta Title: max 60 characters
-        $rawTitle = $post->title;
-        if (mb_strlen($rawTitle) > 60) {
-            $pageTitle = mb_substr($rawTitle, 0, 57) . '...';
+        // Meta Title: Use custom seo_title if set, otherwise autogenerate (max 60 characters)
+        if (!empty($post->seo_title)) {
+            $pageTitle = $post->seo_title;
         } else {
-            $pageTitle = $rawTitle;
+            $rawTitle = $post->title;
+            if (mb_strlen($rawTitle) > 60) {
+                $pageTitle = mb_substr($rawTitle, 0, 57) . '...';
+            } else {
+                $pageTitle = $rawTitle;
+            }
         }
         
-        // Meta Description: max 155 characters ending in "..."
-        $cleanContent = strip_tags($post->content);
-        $cleanContent = preg_replace('/\s+/', ' ', $cleanContent);
-        $cleanContent = trim($cleanContent);
-        
-        if (mb_strlen($cleanContent) > 155) {
-            $seoDescription = mb_substr($cleanContent, 0, 152) . '...';
+        // Meta Description: Use custom seo_description if set, otherwise autogenerate (max 155 characters ending in "...")
+        if (!empty($post->seo_description)) {
+            $seoDescription = $post->seo_description;
         } else {
-            if (mb_strlen($cleanContent) > 152) {
+            $cleanContent = strip_tags($post->content);
+            $cleanContent = preg_replace('/\s+/', ' ', $cleanContent);
+            $cleanContent = trim($cleanContent);
+            
+            if (mb_strlen($cleanContent) > 155) {
                 $seoDescription = mb_substr($cleanContent, 0, 152) . '...';
             } else {
-                $seoDescription = $cleanContent;
+                if (mb_strlen($cleanContent) > 152) {
+                    $seoDescription = mb_substr($cleanContent, 0, 152) . '...';
+                } else {
+                    $seoDescription = $cleanContent;
+                }
             }
         }
         
-        // Meta Keywords Extraction: automatic from title and content
-        $keywordsList = [];
-        
-        // Title words (length >= 4)
-        $titleClean = strtolower(preg_replace('/[^a-záéíóúüñ\s]/u', '', $post->title));
-        $titleWords = explode(' ', $titleClean);
-        foreach ($titleWords as $word) {
-            $word = trim($word);
-            if (mb_strlen($word) >= 4) {
-                $keywordsList[] = $word;
+        // Meta Keywords: Use custom seo_keywords if set, otherwise autogenerate from title and content
+        if (!empty($post->seo_keywords)) {
+            $seoKeywords = $post->seo_keywords;
+        } else {
+            $keywordsList = [];
+            
+            // Title words (length >= 4)
+            $titleClean = strtolower(preg_replace('/[^a-záéíóúüñ\s]/u', '', $post->title));
+            $titleWords = explode(' ', $titleClean);
+            foreach ($titleWords as $word) {
+                $word = trim($word);
+                if (mb_strlen($word) >= 4) {
+                    $keywordsList[] = $word;
+                }
             }
-        }
-        
-        // Content frequent words (excluding stop words)
-        $contentClean = strtolower(preg_replace('/[^a-záéíóúüñ\s]/u', '', strip_tags($post->content)));
-        $contentWords = explode(' ', $contentClean);
-        
-        $stopWords = [
-            'para', 'como', 'este', 'esta', 'estos', 'estas', 'todo', 'toda', 'todos', 'todas', 
-            'sobre', 'entre', 'desde', 'hasta', 'hacia', 'donde', 'cuando', 'quien', 'cual', 'cuyo', 
-            'pero', 'sino', 'porque', 'pues', 'aunque', 'tambien', 'tampoco', 'luego', 'despues', 
-            'antes', 'ahora', 'mientras', 'durante', 'contra', 'segundo', 'primero', 'suyo', 'suya', 
-            'suyos', 'suyas', 'nuestro', 'nuestra', 'nuestros', 'nuestras', 'vuestro', 'vuestra', 
-            'vuestros', 'vuestras', 'con', 'sin', 'por', 'del', 'los', 'las', 'una', 'uno', 'unos', 
-            'unas', 'sus', 'ese', 'esa', 'esos', 'esas', 'muy', 'mas', 'bien', 'mal', 'siempre', 
-            'nunca', 'jamas', 'tal', 'tales', 'otro', 'otra', 'otros', 'otras', 'algun', 'alguna', 
-            'algunos', 'algunas', 'ningun', 'ninguna', 'ningunos', 'ningunas', 'cada', 'ambos', 'ambas', 
-            'mucho', 'mucha', 'muchos', 'muchas', 'poco', 'poca', 'pocos', 'pocas', 'tanto', 'tanta', 
-            'tantos', 'tantas', 'demas', 'mismo', 'misma', 'mismos', 'mismas', 'propio', 'propia', 
-            'propios', 'propias', 'tiene', 'tienen', 'hacer', 'puede', 'pueden', 'crear', 'nuevo', 'nueva'
-        ];
-        
-        $wordCounts = [];
-        foreach ($contentWords as $word) {
-            $word = trim($word);
-            if (mb_strlen($word) >= 4 && !in_array($word, $stopWords)) {
-                $wordCounts[$word] = isset($wordCounts[$word]) ? $wordCounts[$word] + 1 : 1;
+            
+            // Content frequent words (excluding stop words)
+            $contentClean = strtolower(preg_replace('/[^a-záéíóúüñ\s]/u', '', strip_tags($post->content)));
+            $contentWords = explode(' ', $contentClean);
+            
+            $stopWords = [
+                'para', 'como', 'este', 'esta', 'estos', 'estas', 'todo', 'toda', 'todos', 'todas', 
+                'sobre', 'entre', 'desde', 'hasta', 'hacia', 'donde', 'cuando', 'quien', 'cual', 'cuyo', 
+                'pero', 'sino', 'porque', 'pues', 'aunque', 'tambien', 'tampoco', 'luego', 'despues', 
+                'antes', 'ahora', 'mientras', 'durante', 'contra', 'segundo', 'primero', 'suyo', 'suya', 
+                'suyos', 'suyas', 'nuestro', 'nuestra', 'nuestros', 'nuestras', 'vuestro', 'vuestra', 
+                'vuestros', 'vuestras', 'con', 'sin', 'por', 'del', 'los', 'las', 'una', 'uno', 'unos', 
+                'unas', 'sus', 'ese', 'esa', 'esos', 'esas', 'muy', 'mas', 'bien', 'mal', 'siempre', 
+                'nunca', 'jamas', 'tal', 'tales', 'otro', 'otra', 'otros', 'otras', 'algun', 'alguna', 
+                'algunos', 'algunas', 'ningun', 'ninguna', 'ningunos', 'ningunas', 'cada', 'ambos', 'ambas', 
+                'mucho', 'mucha', 'muchos', 'muchas', 'poco', 'poca', 'pocos', 'pocas', 'tanto', 'tanta', 
+                'tantos', 'tantas', 'demas', 'mismo', 'misma', 'mismos', 'mismas', 'propio', 'propia', 
+                'propios', 'propias', 'tiene', 'tienen', 'hacer', 'puede', 'pueden', 'crear', 'nuevo', 'nueva'
+            ];
+            
+            $wordCounts = [];
+            foreach ($contentWords as $word) {
+                $word = trim($word);
+                if (mb_strlen($word) >= 4 && !in_array($word, $stopWords)) {
+                    $wordCounts[$word] = isset($wordCounts[$word]) ? $wordCounts[$word] + 1 : 1;
+                }
             }
+            
+            arsort($wordCounts);
+            $topContentWords = array_slice(array_keys($wordCounts), 0, 10);
+            $keywordsList = array_merge($keywordsList, $topContentWords);
+            
+            $keywordsList = array_unique($keywordsList);
+            $seoKeywords = implode(', ', array_slice($keywordsList, 0, 15));
         }
-        
-        arsort($wordCounts);
-        $topContentWords = array_slice(array_keys($wordCounts), 0, 10);
-        $keywordsList = array_merge($keywordsList, $topContentWords);
-        
-        $keywordsList = array_unique($keywordsList);
-        $seoKeywords = implode(', ', array_slice($keywordsList, 0, 15));
     }
+
+    // Configuración dinámica de OpenGraph, Twitter Cards y JSON-LD
+    $currentUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    $ogTitle = $pageTitle;
+    $ogDescription = $seoDescription;
+    $ogImage = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . Helpers::asset('favicon.ico');
+    $ogType = 'website';
+
+    if (isset($post) && $post instanceof \App\Models\Post) {
+        $ogType = 'article';
+        if ($post->featured_image) {
+            $ogImage = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . Helpers::asset('uploads/' . $post->featured_image);
+        }
+    }
+
+    // Generar JSON-LD de Breadcrumbs
+    $breadcrumbSchema = null;
+    if (isset($post) && $post instanceof \App\Models\Post) {
+        $cat = $post->getCategory();
+        $itemList = [[
+            "@type" => "ListItem",
+            "position" => 1,
+            "name" => "Inicio",
+            "item" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/"
+        ]];
+        $pos = 2;
+        if ($cat) {
+            if ($cat->parent_id) {
+                $parentCat = \App\Models\Category::find($cat->parent_id);
+                if ($parentCat) {
+                    $itemList[] = [
+                        "@type" => "ListItem",
+                        "position" => $pos++,
+                        "name" => $parentCat->name,
+                        "item" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/" . $parentCat->slug
+                    ];
+                }
+            }
+            $itemList[] = [
+                "@type" => "ListItem",
+                "position" => $pos++,
+                "name" => $cat->name,
+                "item" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/" . $cat->slug
+            ];
+        }
+        $itemList[] = [
+            "@type" => "ListItem",
+            "position" => $pos,
+            "name" => $post->title,
+            "item" => $currentUrl
+        ];
+        $breadcrumbSchema = [
+            "@context" => "https://schema.org",
+            "@type" => "BreadcrumbList",
+            "itemListElement" => $itemList
+        ];
+    } elseif (isset($category) && $category instanceof \App\Models\Category) {
+        $itemList = [[
+            "@type" => "ListItem",
+            "position" => 1,
+            "name" => "Inicio",
+            "item" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/"
+        ]];
+        $pos = 2;
+        if ($category->parent_id) {
+            $parentCat = \App\Models\Category::find($category->parent_id);
+            if ($parentCat) {
+                $itemList[] = [
+                    "@type" => "ListItem",
+                    "position" => $pos++,
+                    "name" => $parentCat->name,
+                    "item" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/" . $parentCat->slug
+                ];
+            }
+        }
+        $itemList[] = [
+            "@type" => "ListItem",
+            "position" => $pos,
+            "name" => $category->name,
+            "item" => $currentUrl
+        ];
+        $breadcrumbSchema = [
+            "@context" => "https://schema.org",
+            "@type" => "BreadcrumbList",
+            "itemListElement" => $itemList
+        ];
+    } elseif (isset($page) && $page instanceof \App\Models\Page) {
+        $itemList = [
+            [
+                "@type" => "ListItem",
+                "position" => 1,
+                "name" => "Inicio",
+                "item" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/"
+            ],
+            [
+                "@type" => "ListItem",
+                "position" => 2,
+                "name" => $page->title,
+                "item" => $currentUrl
+            ]
+        ];
+        $breadcrumbSchema = [
+            "@context" => "https://schema.org",
+            "@type" => "BreadcrumbList",
+            "itemListElement" => $itemList
+        ];
+    }
+
+    // Generar JSON-LD de Artículo
+    $articleSchema = null;
+    if (isset($post) && $post instanceof \App\Models\Post) {
+        $articleSchema = [
+            "@context" => "https://schema.org",
+            "@type" => "BlogPosting",
+            "headline" => $post->title,
+            "description" => $seoDescription,
+            "datePublished" => date('c', strtotime($post->created_at)),
+            "dateModified" => date('c', strtotime($post->created_at)),
+            "author" => [
+                "@type" => "Person",
+                "name" => $post->getAuthor()->display_name
+            ],
+            "publisher" => [
+                "@type" => "Organization",
+                "name" => $siteName,
+                "logo" => [
+                    "@type" => "ImageObject",
+                    "url" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . Helpers::asset('favicon.ico')
+                ]
+            ],
+            "mainEntityOfPage" => [
+                "@type" => "WebPage",
+                "@id" => $currentUrl
+            ]
+        ];
+        if ($post->featured_image) {
+            $articleSchema["image"] = [
+                (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . Helpers::asset('uploads/' . $post->featured_image)
+            ];
+        }
+    }
+
+    // Generar JSON-LD general para Organización y Sitio
+    $siteSchema = [
+        "@context" => "https://schema.org",
+        "@type" => "WebSite",
+        "name" => $siteName,
+        "url" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/"
+    ];
+    $orgSchema = [
+        "@context" => "https://schema.org",
+        "@type" => "Organization",
+        "name" => $siteName,
+        "url" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/",
+        "logo" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . Helpers::asset('favicon.ico')
+    ];
     ?>
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
     <meta name="description" content="<?php echo htmlspecialchars($seoDescription); ?>">
     <meta name="keywords" content="<?php echo htmlspecialchars($seoKeywords); ?>">
+
+    <!-- Metadatos OpenGraph (Redes Sociales) -->
+    <meta property="og:title" content="<?php echo htmlspecialchars($ogTitle); ?>">
+    <meta property="og:description" content="<?php echo htmlspecialchars($ogDescription); ?>">
+    <meta property="og:image" content="<?php echo htmlspecialchars($ogImage); ?>">
+    <meta property="og:url" content="<?php echo htmlspecialchars($currentUrl); ?>">
+    <meta property="og:type" content="<?php echo htmlspecialchars($ogType); ?>">
+    <meta property="og:site_name" content="<?php echo htmlspecialchars($siteName); ?>">
+
+    <!-- Metadatos Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?php echo htmlspecialchars($ogTitle); ?>">
+    <meta name="twitter:description" content="<?php echo htmlspecialchars($ogDescription); ?>">
+    <meta name="twitter:image" content="<?php echo htmlspecialchars($ogImage); ?>">
+
+    <!-- Datos Estructurados JSON-LD (Motores de Búsqueda) -->
+    <script type="application/ld+json">
+        <?php echo json_encode($siteSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
+    </script>
+    <script type="application/ld+json">
+        <?php echo json_encode($orgSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
+    </script>
+    <?php if ($breadcrumbSchema): ?>
+    <script type="application/ld+json">
+        <?php echo json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
+    </script>
+    <?php endif; ?>
+    <?php if ($articleSchema): ?>
+    <script type="application/ld+json">
+        <?php echo json_encode($articleSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
+    </script>
+    <?php endif; ?>
     
     <!-- Tailwind Styles (Compilado) -->
     <link rel="stylesheet" href="<?php echo Helpers::asset('css/styles.css'); ?>">
@@ -307,9 +507,6 @@ use App\Helpers;
                                         <svg class="mobile-sub-arrow w-3.5 h-3.5 transform transition-transform duration-200 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </button>
                                     <div class="mobile-sub-list hidden w-full bg-slate-100/50 dark:bg-slate-950/30 py-1 space-y-1 rounded-xl">
-                                        <a href="/?route=category&slug=<?php echo $cat->slug; ?>" class="block text-center text-xs py-1.5 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 font-medium italic">
-                                            Ver todo en <?php echo htmlspecialchars($cat->name); ?>
-                                        </a>
                                         <?php foreach($subcategories as $sub): ?>
                                             <a href="/?route=category&slug=<?php echo $sub->slug; ?>" class="block text-center text-xs py-1.5 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 font-medium">
                                                 <?php echo htmlspecialchars($sub->name); ?>
@@ -329,16 +526,7 @@ use App\Helpers;
             </div>
             
             <a href="/?route=page&slug=contacto" class="w-full text-center font-semibold py-2.5 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 transition-colors text-base">Contacto</a>
-            
-            <!-- Buscador Rediseñado -->
-            <form action="/" method="GET" class="w-full max-w-xs relative mt-4">
-                <input type="hidden" name="route" value="search">
-                <input type="text" name="s" placeholder="Buscar en el blog..." value="<?php echo isset($query) ? htmlspecialchars($query) : ''; ?>" class="w-full px-4 py-2.5 pl-10 text-sm text-center bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-brand-500 focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                <div class="absolute left-3 top-3 text-slate-400 dark:text-slate-500">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-            </form>
-        </div>
+         </div>
     </header>
 
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
