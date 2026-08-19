@@ -168,9 +168,29 @@ require __DIR__ . '/../layout/header.php';
 
                 <!-- Contenido (Editor) -->
                 <div class="space-y-2">
-                    <label for="modal-post-content" class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Cuerpo del Artículo *</label>
-                    <p class="text-[10px] text-slate-400">Puedes usar etiquetas HTML o Markdown simple.</p>
-                    <textarea id="modal-post-content" name="content" required rows="10" placeholder="Escribe el contenido completo del artículo aquí..." class="w-full px-4 py-3 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-xl focus:outline-none transition-colors font-mono text-slate-800 dark:text-slate-100"></textarea>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider font-semibold">Cuerpo del Artículo *</label>
+                    <p class="text-[10px] text-slate-400 mb-2">Utiliza el editor visual enriquecido para formatear la entrada de forma dinámica.</p>
+                    
+                    <style>
+                        #modal-editor-container {
+                            border-bottom-left-radius: 0.75rem;
+                            border-bottom-right-radius: 0.75rem;
+                            border-color: rgba(226, 232, 240, 0.8) !important;
+                        }
+                        .dark #modal-editor-container {
+                            border-color: rgba(30, 41, 59, 0.8) !important;
+                        }
+                        .ql-editor {
+                            min-height: 250px;
+                            max-height: 400px;
+                            overflow-y: auto;
+                            font-family: 'Outfit', 'Inter', sans-serif;
+                            font-size: 14px;
+                        }
+                    </style>
+
+                    <div id="modal-editor-container" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"></div>
+                    <textarea id="modal-post-content" name="content" style="display:none;" required></textarea>
                 </div>
 
                 <!-- Clasificación y Portada -->
@@ -300,6 +320,7 @@ require __DIR__ . '/../layout/header.php';
     let userManuallyEditedSlug = false;
     let userManuallyEditedSeoTitle = false;
     let userManuallyEditedSeoDesc = false;
+    let postQuill = null;
 
     function generateSlug(text) {
         return text.toLowerCase()
@@ -374,6 +395,9 @@ require __DIR__ . '/../layout/header.php';
         modalId.value = "";
         modalPostTitle.value = "";
         modalPostContent.value = "";
+        if (postQuill) {
+            postQuill.root.innerHTML = "";
+        }
         modalPostStatus.value = "published";
         if (modalPostStatusToggle) {
             modalPostStatusToggle.checked = true;
@@ -412,6 +436,9 @@ require __DIR__ . '/../layout/header.php';
                     modalId.value = post.id;
                     modalPostTitle.value = post.title;
                     modalPostContent.value = post.content;
+                    if (postQuill) {
+                        postQuill.root.innerHTML = post.content;
+                    }
                     modalPostStatus.value = post.status;
                     if (modalPostStatusToggle) {
                         modalPostStatusToggle.checked = (post.status === 'published');
@@ -454,6 +481,42 @@ require __DIR__ . '/../layout/header.php';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar Quill para entradas
+        postQuill = new Quill('#modal-editor-container', {
+            theme: 'snow',
+            placeholder: 'Escribe el contenido del artículo aquí...',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'image', 'clean']
+                ]
+            }
+        });
+
+        // Sincronizar en cada cambio de texto
+        postQuill.on('text-change', () => {
+            const html = postQuill.root.innerHTML;
+            if (postQuill.getText().trim() === '') {
+                modalPostContent.value = '';
+            } else {
+                modalPostContent.value = html;
+            }
+
+            if (!userManuallyEditedSeoDesc && modalPostSeoDescription) {
+                modalPostSeoDescription.value = generateSeoDescription(html);
+            }
+        });
+
+        // Fallback al enviar formulario
+        const postForm = modal.querySelector('form');
+        if (postForm) {
+            postForm.addEventListener('submit', () => {
+                modalPostContent.value = postQuill.root.innerHTML;
+            });
+        }
+
         if (modalPostTitle && modalPostSlug) {
             modalPostTitle.addEventListener('input', () => {
                 if (!userManuallyEditedSlug) {
@@ -485,19 +548,11 @@ require __DIR__ . '/../layout/header.php';
             });
         }
 
-        if (modalPostContent && modalPostSeoDescription) {
-            modalPostContent.addEventListener('input', () => {
-                if (!userManuallyEditedSeoDesc) {
-                    modalPostSeoDescription.value = generateSeoDescription(modalPostContent.value);
-                }
-            });
-        }
-
         if (modalPostSeoDescription) {
             modalPostSeoDescription.addEventListener('input', () => {
                 if (modalPostSeoDescription.value.trim() === '') {
                     userManuallyEditedSeoDesc = false;
-                    modalPostSeoDescription.value = generateSeoDescription(modalPostContent.value);
+                    modalPostSeoDescription.value = generateSeoDescription(postQuill.root.innerHTML);
                 } else {
                     userManuallyEditedSeoDesc = true;
                 }

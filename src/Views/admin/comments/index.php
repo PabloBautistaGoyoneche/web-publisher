@@ -4,13 +4,30 @@ require __DIR__ . '/../layout/header.php';
 ?>
 
 <!-- Cabecera de Página -->
-<div class="mb-10">
-    <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-        Moderación de Comentarios
-    </h1>
-    <p class="text-sm text-slate-500 mt-1">
-        Revisa, aprueba y elimina comentarios escritos por los lectores en tus entradas.
-    </p>
+<div class="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Moderación de Comentarios
+        </h1>
+        <p class="text-sm text-slate-500 mt-1">
+            Revisa, aprueba y elimina comentarios escritos por los lectores en tus entradas.
+        </p>
+    </div>
+    
+    <!-- Switch para Activar/Desactivar Caja de Comentarios en las Entradas -->
+    <div class="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 px-4 py-3 rounded-2xl shadow-sm">
+        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Caja de comentarios en entradas:</span>
+        <?php $commentsEnabled = \App\Models\Setting::get('enable_comments', '1') === '1'; ?>
+        <form id="toggle-comments-form" action="/?route=admin/comments/toggle" method="POST" class="flex items-center">
+            <button type="button" id="comments-toggle-btn" 
+                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none <?php echo $commentsEnabled ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'; ?>"
+                    onclick="document.getElementById('comments-toggle-input').value = '<?php echo $commentsEnabled ? '0' : '1'; ?>'; document.getElementById('toggle-comments-form').submit();">
+                <span class="sr-only">Habilitar/Deshabilitar comentarios</span>
+                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out <?php echo $commentsEnabled ? 'translate-x-5' : 'translate-x-0'; ?>"></span>
+            </button>
+            <input type="hidden" id="comments-toggle-input" name="enable_comments" value="<?php echo $commentsEnabled ? '1' : '0'; ?>">
+        </form>
+    </div>
 </div>
 
 <!-- Tabla CRUD de Comentarios -->

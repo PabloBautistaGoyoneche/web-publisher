@@ -409,7 +409,7 @@ use App\Helpers;
                 <!-- Enlaces de navegación desktop -->
                 <nav class="hidden xl:flex items-center space-x-8 font-medium">
                     <a href="/" class="text-white hover:text-white/80 transition-colors">Inicio</a>
-                    <a href="/?route=page&slug=sobre-el-autor" class="text-white hover:text-white/80 transition-colors">Sobre Nosotros</a>
+                    <a href="/?route=page&slug=sobre-el-autor" class="text-white hover:text-white/80 transition-colors">Sobre el Autor</a>
                     
                     <!-- Menú dinámico de categorías -->
                     <div class="relative group">
@@ -487,7 +487,7 @@ use App\Helpers;
         <!-- Menú Móvil -->
         <div id="mobile-menu" class="hidden xl:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 py-6 flex flex-col items-center gap-2">
             <a href="/" class="w-full text-center font-semibold py-2.5 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 transition-colors text-base">Inicio</a>
-            <a href="/?route=page&slug=sobre-el-autor" class="w-full text-center font-semibold py-2.5 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 transition-colors text-base">Sobre Nosotros</a>
+            <a href="/?route=page&slug=sobre-el-autor" class="w-full text-center font-semibold py-2.5 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 transition-colors text-base">Sobre el Autor</a>
             
             <!-- Acordeón de Categorías -->
             <div class="w-full flex flex-col items-center">

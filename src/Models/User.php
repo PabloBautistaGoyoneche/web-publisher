@@ -57,6 +57,18 @@ class User {
     }
 
     /**
+     * Actualiza el display name de un usuario.
+     */
+    public static function updateDisplayName(int $id, string $displayName): bool {
+        $db = Database::getConnection();
+        $stmt = $db->prepare("UPDATE users SET display_name = :display_name WHERE id = :id");
+        return $stmt->execute([
+            'id' => $id,
+            'display_name' => $displayName
+        ]);
+    }
+
+    /**
      * Mapea un registro de la base de datos a un objeto User.
      */
     private static function map(array $row): self {

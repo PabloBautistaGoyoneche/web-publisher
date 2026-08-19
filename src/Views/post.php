@@ -47,21 +47,12 @@ require __DIR__ . '/layout/header.php';
             
             <!-- Metadatos de publicación -->
             <div class="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/80 pb-6">
-                <div class="flex items-center gap-2">
-                    <span class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-white uppercase">
-                        <?php echo substr($post->getAuthor()->display_name, 0, 1); ?>
-                    </span>
-                    <span class="font-medium text-slate-700 dark:text-slate-300"><?php echo htmlspecialchars($post->getAuthor()->display_name); ?></span>
+                <div class="flex items-center gap-1">
+                    <span>Autor:</span>
+                    <span class="font-semibold text-brand-600 dark:text-brand-400"><?php echo htmlspecialchars($post->getAuthor()->display_name); ?></span>
                 </div>
                 <span>&bull;</span>
                 <span><?php echo Helpers::formatDate($post->created_at); ?></span>
-                <span>&bull;</span>
-                <span><?php echo Helpers::readTime($post->content); ?></span>
-                <span>&bull;</span>
-                <span class="flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                    <?php echo $post->views_count; ?> vistas
-                </span>
             </div>
         </header>
 
@@ -116,6 +107,7 @@ require __DIR__ . '/layout/header.php';
         <?php endif; ?>
 
         <!-- Sección de Comentarios -->
+        <?php if (\App\Models\Setting::get('enable_comments', '1') === '1'): ?>
         <div class="space-y-8 pt-8 border-t border-slate-100 dark:border-slate-800/80">
             <h3 class="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
                 Comentarios (<?php echo count($comments); ?>)
@@ -183,6 +175,7 @@ require __DIR__ . '/layout/header.php';
                 </form>
             </div>
         </div>
+        <?php endif; ?>
 
     </div>
 

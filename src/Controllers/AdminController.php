@@ -21,6 +21,11 @@ class AdminController {
             header("Location: /?route=admin/login");
             exit;
         }
+        $user = User::findByUsername($_SESSION['admin_user']);
+        if ($user) {
+            $_SESSION['admin_id'] = $user->id;
+            $_SESSION['admin_name'] = $user->display_name;
+        }
     }
 
     /**
@@ -522,6 +527,19 @@ class AdminController {
     }
 
     /**
+     * CRUD: Activar/Desactivar Caja de Comentarios en las Entradas
+     */
+    public function toggleComments(): void {
+        $this->checkAuth();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $enable = isset($_POST['enable_comments']) && $_POST['enable_comments'] === '1' ? '1' : '0';
+            \App\Models\Setting::set('enable_comments', $enable);
+        }
+        header("Location: /?route=admin/comments");
+        exit;
+    }
+
+    /**
      * CRUD: Listar Páginas Estáticas
      */
     public function pages(): void {
@@ -593,22 +611,58 @@ class AdminController {
                 $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
             }
 
-            if (empty($title) || empty($content)) {
-                $error = 'Por favor, completa todos los campos obligatorios.';
-            } else {
-                $success = \App\Models\Page::update($page->id, $title, $slug, $content);
-                if ($success) {
-                    header("Location: /?route=admin/pages");
-                    exit;
+            if ($page->slug === 'sobre-el-autor') {
+                $authorName = trim($_POST['author_name'] ?? '');
+                if (empty($authorName)) {
+                    $error = 'El nombre del autor es obligatorio.';
                 } else {
-                    $error = 'Ocurrió un error al actualizar la página. El slug podría estar duplicado.';
+                    $adminId = $_SESSION['admin_id'] ?? null;
+                    $author = null;
+                    if ($adminId) {
+                        $author = User::find($adminId);
+                    }
+                    if (!$author && isset($_SESSION['admin_user'])) {
+                        $author = User::findByUsername($_SESSION['admin_user']);
+                    }
+                    if ($author) {
+                        $oldName = $author->display_name;
+                        if ($authorName !== $oldName) {
+                            User::updateDisplayName($author->id, $authorName);
+                            $_SESSION['admin_name'] = $authorName;
+                            $content = str_replace($oldName, $authorName, $content);
+                        }
+                    }
                 }
             }
+
+            if (!$error) {
+                if (empty($title) || empty($content)) {
+                    $error = 'Por favor, completa todos los campos obligatorios.';
+                } else {
+                    $success = \App\Models\Page::update($page->id, $title, $slug, $content);
+                    if ($success) {
+                        header("Location: /?route=admin/pages");
+                        exit;
+                    } else {
+                        $error = 'Ocurrió un error al actualizar la página. El slug podría estar duplicado.';
+                    }
+                }
+            }
+        }
+
+        $adminId = $_SESSION['admin_id'] ?? null;
+        $author = null;
+        if ($adminId) {
+            $author = User::find($adminId);
+        }
+        if (!$author && isset($_SESSION['admin_user'])) {
+            $author = User::findByUsername($_SESSION['admin_user']);
         }
 
         $this->render('admin/pages/edit', [
             'title' => 'Editar Página - Admin Panel',
             'page' => $page,
+            'author' => $author,
             'error' => $error
         ]);
     }

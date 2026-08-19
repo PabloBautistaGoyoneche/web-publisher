@@ -42,9 +42,61 @@ require __DIR__ . '/../layout/header.php';
 
         <!-- Campo: Contenido -->
         <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-slate-800/80 space-y-2">
-            <label for="content" class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Contenido de la Página *</label>
-            <p class="text-[10px] text-slate-400 mb-2">Escribe usando etiquetas HTML para estructurar títulos, párrafos y listas.</p>
-            <textarea id="content" name="content" required rows="18" placeholder="Escribe el contenido aquí..." class="w-full px-4 py-3 text-sm bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 focus:border-brand-500 rounded-xl focus:outline-none transition-colors font-mono"></textarea>
+            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider font-semibold">Contenido de la Página *</label>
+            <p class="text-[10px] text-slate-400 mb-2">Utiliza el editor visual enriquecido para formatear la página de forma dinámica.</p>
+            
+            <!-- Estilos de Quill personalizados para modo oscuro -->
+            <style>
+                .ql-toolbar.ql-snow {
+                    border-color: rgba(226, 232, 240, 0.8) !important;
+                    background-color: #f8fafc;
+                    border-top-left-radius: 0.75rem;
+                    border-top-right-radius: 0.75rem;
+                }
+                .dark .ql-toolbar.ql-snow {
+                    border-color: rgba(30, 41, 59, 0.8) !important;
+                    background-color: #0f172a;
+                    color: #e2e8f0;
+                }
+                .dark .ql-toolbar.ql-snow .ql-stroke {
+                    stroke: #94a3b8;
+                }
+                .dark .ql-toolbar.ql-snow .ql-fill {
+                    fill: #94a3b8;
+                }
+                .dark .ql-toolbar.ql-snow .ql-picker {
+                    color: #94a3b8;
+                }
+                .dark .ql-toolbar.ql-snow .ql-picker-options {
+                    background-color: #0f172a;
+                    border-color: rgba(30, 41, 59, 0.8);
+                }
+                
+                #editor-container {
+                    border-bottom-left-radius: 0.75rem;
+                    border-bottom-right-radius: 0.75rem;
+                    border-color: rgba(226, 232, 240, 0.8) !important;
+                }
+                .dark #editor-container {
+                    border-color: rgba(30, 41, 59, 0.8) !important;
+                }
+                .ql-container.ql-snow {
+                    border-color: rgba(226, 232, 240, 0.8) !important;
+                }
+                .ql-editor {
+                    min-height: 350px;
+                    font-family: 'Outfit', 'Inter', sans-serif;
+                    font-size: 14px;
+                }
+                .ql-editor.ql-blank::before {
+                    color: #94a3b8 !important;
+                    font-style: normal;
+                }
+            </style>
+
+            <div id="editor-container" class="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100"></div>
+            
+            <textarea id="content" name="content" style="display:none;" required></textarea>
         </div>
 
     </div>
@@ -92,6 +144,27 @@ require __DIR__ . '/../layout/header.php';
                 slugInput.value = slug;
             });
         }
+
+        // Inicializar Quill
+        const quill = new Quill('#editor-container', {
+            theme: 'snow',
+            placeholder: 'Escribe el contenido de la página aquí...',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'image', 'clean']
+                ]
+            }
+        });
+
+        // Sincronizar contenido antes de enviar el formulario
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            const contentInput = document.getElementById('content');
+            contentInput.value = quill.root.innerHTML;
+        });
     });
 </script>
 

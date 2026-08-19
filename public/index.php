@@ -157,6 +157,7 @@ if (empty($route)) {
             'admin/comments',
             'admin/comments/approve',
             'admin/comments/delete',
+            'admin/comments/toggle',
             'admin/pages',
             'admin/pages/create',
             'admin/pages/edit',
@@ -199,6 +200,7 @@ if (empty($route)) {
             'admin/comments',
             'admin/comments/approve',
             'admin/comments/delete',
+            'admin/comments/toggle',
             'admin/pages',
             'admin/pages/create',
             'admin/pages/edit',
@@ -315,6 +317,10 @@ try {
             
         case 'admin/comments/delete':
             $admin->deleteComment();
+            break;
+            
+        case 'admin/comments/toggle':
+            $admin->toggleComments();
             break;
             
         case 'admin/pages':

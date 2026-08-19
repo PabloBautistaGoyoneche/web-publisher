@@ -52,22 +52,26 @@ class BlogController {
         $commentError = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_comment'])) {
-            $name = trim($_POST['author_name'] ?? '');
-            $email = trim($_POST['author_email'] ?? '');
-            $content = trim($_POST['content'] ?? '');
-
-            if (empty($name) || empty($email) || empty($content)) {
-                $commentError = 'Todos los campos son obligatorios para comentar.';
-            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $commentError = 'Por favor, introduce un correo electrónico válido.';
+            if (\App\Models\Setting::get('enable_comments', '1') !== '1') {
+                $commentError = 'Los comentarios están deshabilitados temporalmente.';
             } else {
-                $success = Comment::create($post->id, $name, $email, $content);
-                if ($success) {
-                    // Recargar comentarios
-                    $comments = $post->getComments();
-                    $commentSuccess = true;
+                $name = trim($_POST['author_name'] ?? '');
+                $email = trim($_POST['author_email'] ?? '');
+                $content = trim($_POST['content'] ?? '');
+
+                if (empty($name) || empty($email) || empty($content)) {
+                    $commentError = 'Todos los campos son obligatorios para comentar.';
+                } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $commentError = 'Por favor, introduce un correo electrónico válido.';
                 } else {
-                    $commentError = 'Ocurrió un error al guardar tu comentario. Inténtalo de nuevo.';
+                    $success = Comment::create($post->id, $name, $email, $content);
+                    if ($success) {
+                        // Recargar comentarios
+                        $comments = $post->getComments();
+                        $commentSuccess = true;
+                    } else {
+                        $commentError = 'Ocurrió un error al guardar tu comentario. Inténtalo de nuevo.';
+                    }
                 }
             }
         }

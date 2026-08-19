@@ -71,6 +71,11 @@ require __DIR__ . '/layout/header.php';
                                     </a>
                                 </h3>
                                 
+                                <!-- Fecha -->
+                                <span class="text-xs text-slate-400 dark:text-slate-500 font-medium block">
+                                    <?php echo Helpers::formatDate($post->created_at); ?>
+                                </span>
+                                
                                 <!-- Extracto -->
                                 <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-3">
                                     <?php echo htmlspecialchars($post->excerpt); ?>
@@ -85,7 +90,10 @@ require __DIR__ . '/layout/header.php';
                                     </span>
                                     <span><?php echo htmlspecialchars($post->getAuthor()->display_name); ?></span>
                                 </div>
-                                <span><?php echo Helpers::formatDate($post->created_at); ?></span>
+                                <a href="/?route=post&slug=<?php echo $post->slug; ?>" class="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-350 font-bold transition-colors inline-flex items-center gap-1">
+                                    Ver más
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                </a>
                             </div>
                         </div>
                     </article>

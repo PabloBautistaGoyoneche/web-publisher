@@ -35,6 +35,10 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo \App\Helpers::asset('css/styles.css'); ?>">
     
+    <!-- Quill Editor (WYSIWYG) CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+    
     <!-- Prevent favicon requests & clear cached/default favicons -->
     <link rel="icon" href="data:,">
     
