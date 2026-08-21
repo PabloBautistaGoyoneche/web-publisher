@@ -44,7 +44,7 @@ class BlogController {
         $post->incrementViews();
 
         $comments = $post->getComments();
-        $relatedPosts = $post->getRelated(3);
+        $relatedPosts = $post->getRelated(6);
         $categories = Category::all();
 
         // Procesar comentario enviado (POST)

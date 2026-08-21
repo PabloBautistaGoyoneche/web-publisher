@@ -145,6 +145,7 @@ if (empty($route)) {
             'admin/logout',
             'admin/dashboard',
             'admin/settings',
+            'admin/cta-ebook',
             'admin/posts',
             'admin/posts/create',
             'admin/posts/edit',
@@ -188,6 +189,7 @@ if (empty($route)) {
             'admin/logout',
             'admin/dashboard',
             'admin/settings',
+            'admin/cta-ebook',
             'admin/posts',
             'admin/posts/create',
             'admin/posts/edit',
@@ -268,6 +270,10 @@ try {
             
         case 'admin/settings':
             $admin->settings();
+            break;
+            
+        case 'admin/cta-ebook':
+            $admin->ctaEbook();
             break;
             
         case 'admin/posts':

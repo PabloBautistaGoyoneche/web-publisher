@@ -728,12 +728,17 @@ class AdminController {
             $themeLightFooter = trim($_POST['theme_light_footer'] ?? '');
             $themeDarkFooter = trim($_POST['theme_dark_footer'] ?? '');
 
+            $ctaEbookTitle = trim($_POST['cta_ebook_title'] ?? '');
+            $ctaEbookDesc = trim($_POST['cta_ebook_desc'] ?? '');
+            $ctaEbookButton = trim($_POST['cta_ebook_button'] ?? '');
+            $ctaEbookLink = trim($_POST['cta_ebook_link'] ?? '');
+
             // Validar formato hexadecimal
             $hexPattern = '/^#[0-9a-fA-F]{6}$/';
 
             if (empty($siteName) || empty($themeLight) || empty($themeLightSec) || empty($themeDark) || empty($themeDarkSec) || 
                 empty($themeLightBg) || empty($themeDarkBg) || empty($themeLightHeader) || empty($themeDarkHeader) || 
-                empty($themeLightFooter) || empty($themeDarkFooter)) {
+                empty($themeLightFooter) || empty($themeDarkFooter) || empty($ctaEbookTitle) || empty($ctaEbookDesc) || empty($ctaEbookButton) || empty($ctaEbookLink)) {
                 $error = 'Por favor, completa todos los campos.';
             } elseif (!preg_match($hexPattern, $themeLight) || !preg_match($hexPattern, $themeLightSec) || 
                       !preg_match($hexPattern, $themeDark) || !preg_match($hexPattern, $themeDarkSec) || 
@@ -754,6 +759,10 @@ class AdminController {
                 \App\Models\Setting::set('theme_dark_header', $themeDarkHeader);
                 \App\Models\Setting::set('theme_light_footer', $themeLightFooter);
                 \App\Models\Setting::set('theme_dark_footer', $themeDarkFooter);
+                \App\Models\Setting::set('cta_ebook_title', $ctaEbookTitle);
+                \App\Models\Setting::set('cta_ebook_desc', $ctaEbookDesc);
+                \App\Models\Setting::set('cta_ebook_button', $ctaEbookButton);
+                \App\Models\Setting::set('cta_ebook_link', $ctaEbookLink);
                 $success = true;
             }
         }
@@ -775,6 +784,11 @@ class AdminController {
         $themeLightFooter = \App\Models\Setting::get('theme_light_footer', '#ffffff');
         $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
 
+        $ctaEbookTitle = \App\Models\Setting::get('cta_ebook_title', 'Descarga nuestro eBook Gratuito');
+        $ctaEbookDesc = \App\Models\Setting::get('cta_ebook_desc', 'Aprende los fundamentos del desarrollo web moderno con nuestra guía completa.');
+        $ctaEbookButton = \App\Models\Setting::get('cta_ebook_button', 'Descargar eBook');
+        $ctaEbookLink = \App\Models\Setting::get('cta_ebook_link', '#');
+
         $this->render('admin/settings', [
             'title' => 'Identidad del Sitio - Admin Panel',
             'siteName' => $siteName,
@@ -788,6 +802,103 @@ class AdminController {
             'themeDarkHeader' => $themeDarkHeader,
             'themeLightFooter' => $themeLightFooter,
             'themeDarkFooter' => $themeDarkFooter,
+            'ctaEbookTitle' => $ctaEbookTitle,
+            'ctaEbookDesc' => $ctaEbookDesc,
+            'ctaEbookButton' => $ctaEbookButton,
+            'ctaEbookLink' => $ctaEbookLink,
+            'error' => $error,
+            'success' => $success
+        ]);
+    }
+
+    /**
+     * Muestra y procesa el módulo CTA eBook.
+     */
+    public function ctaEbook(): void {
+        $this->checkAuth();
+
+        $error = null;
+        $success = false;
+
+        $uploadDir = dirname(dirname(__DIR__)) . '/public/uploads/';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $action = $_POST['action'] ?? 'save';
+
+            if ($action === 'delete_file') {
+                $currentLink = \App\Models\Setting::get('cta_ebook_link', '#');
+                if (!empty($currentLink) && $currentLink !== '#') {
+                    $filePath = $uploadDir . $currentLink;
+                    if (file_exists($filePath)) {
+                        @unlink($filePath);
+                    }
+                    \App\Models\Setting::set('cta_ebook_link', '#');
+                    $success = 'El archivo del eBook ha sido eliminado con éxito.';
+                }
+            } else {
+                $ctaEbookTitle = trim($_POST['cta_ebook_title'] ?? '');
+                $ctaEbookDesc = trim($_POST['cta_ebook_desc'] ?? '');
+                $ctaEbookButton = trim($_POST['cta_ebook_button'] ?? '');
+                $ctaEbookLink = trim($_POST['cta_ebook_link'] ?? '#');
+                $ctaEbookDelay = trim($_POST['cta_ebook_delay'] ?? '5');
+
+                if (empty($ctaEbookTitle) || empty($ctaEbookDesc) || empty($ctaEbookButton) || empty($ctaEbookDelay)) {
+                    $error = 'Por favor, completa los campos requeridos.';
+                } else {
+                    // Procesar subida de archivo si existe
+                    if (isset($_FILES['cta_ebook_file']) && $_FILES['cta_ebook_file']['error'] === UPLOAD_ERR_OK) {
+                        $tmpName = $_FILES['cta_ebook_file']['tmp_name'];
+                        $origName = basename($_FILES['cta_ebook_file']['name']);
+                        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                        
+                        // Validar extensiones de eBook permitidas (pdf, epub, zip, docx, etc.)
+                        $allowedExts = ['pdf', 'epub', 'zip', 'rar', 'mobi', 'docx'];
+                        if (!in_array($ext, $allowedExts)) {
+                            $error = 'Formato de archivo no permitido. Solo se permiten: PDF, EPUB, MOBI, ZIP, RAR, DOCX.';
+                        } else {
+                            // Borrar el archivo viejo si existe
+                            $oldLink = \App\Models\Setting::get('cta_ebook_link', '#');
+                            if (!empty($oldLink) && $oldLink !== '#' && file_exists($uploadDir . $oldLink)) {
+                                @unlink($uploadDir . $oldLink);
+                            }
+
+                            // Subir el nuevo archivo
+                            $filename = 'ebook_' . time() . '_' . uniqid() . '.' . $ext;
+                            if (!is_dir($uploadDir)) {
+                                mkdir($uploadDir, 0755, true);
+                            }
+                            if (move_uploaded_file($tmpName, $uploadDir . $filename)) {
+                                $ctaEbookLink = $filename;
+                            }
+                        }
+                    }
+
+                    if (!$error) {
+                        \App\Models\Setting::set('cta_ebook_title', $ctaEbookTitle);
+                        \App\Models\Setting::set('cta_ebook_desc', $ctaEbookDesc);
+                        \App\Models\Setting::set('cta_ebook_button', $ctaEbookButton);
+                        \App\Models\Setting::set('cta_ebook_link', $ctaEbookLink);
+                        \App\Models\Setting::set('cta_ebook_delay', $ctaEbookDelay);
+                        $success = '¡Módulo CTA eBook guardado con éxito!';
+                    }
+                }
+            }
+        }
+
+        // Cargar valores actuales
+        $ctaEbookTitle = \App\Models\Setting::get('cta_ebook_title', 'Descarga nuestro eBook Gratuito');
+        $ctaEbookDesc = \App\Models\Setting::get('cta_ebook_desc', 'Aprende los fundamentos del desarrollo web moderno con nuestra guía completa.');
+        $ctaEbookButton = \App\Models\Setting::get('cta_ebook_button', 'Descargar eBook');
+        $ctaEbookLink = \App\Models\Setting::get('cta_ebook_link', '#');
+        $ctaEbookDelay = \App\Models\Setting::get('cta_ebook_delay', '5');
+
+        $this->render('admin/cta_ebook/index', [
+            'title' => 'Módulo CTA eBook - Admin Panel',
+            'ctaEbookTitle' => $ctaEbookTitle,
+            'ctaEbookDesc' => $ctaEbookDesc,
+            'ctaEbookButton' => $ctaEbookButton,
+            'ctaEbookLink' => $ctaEbookLink,
+            'ctaEbookDelay' => $ctaEbookDelay,
             'error' => $error,
             'success' => $success
         ]);

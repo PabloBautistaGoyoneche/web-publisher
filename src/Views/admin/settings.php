@@ -182,6 +182,39 @@ require __DIR__ . '/layout/header.php';
                 </div>
             </div>
 
+            <!-- SECCIÓN 5: CONFIGURACIÓN DEL CALL TO ACTION (CTA EBOOK) -->
+            <div class="space-y-4 pt-2">
+                <h3 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider border-b border-slate-200/50 dark:border-slate-800/50 pb-2">Configuración del Call to Action (Descarga de eBook)</h3>
+                
+                <div class="space-y-3">
+                    <label for="cta_ebook_title" class="block text-xs font-semibold text-slate-400">Título del CTA</label>
+                    <input type="text" id="cta_ebook_title" name="cta_ebook_title" required 
+                           value="<?php echo htmlspecialchars($ctaEbookTitle); ?>" 
+                           class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-semibold text-slate-800 dark:text-slate-200">
+                </div>
+
+                <div class="space-y-3">
+                    <label for="cta_ebook_desc" class="block text-xs font-semibold text-slate-400">Descripción del CTA</label>
+                    <textarea id="cta_ebook_desc" name="cta_ebook_desc" rows="3" required 
+                              class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-medium text-slate-800 dark:text-slate-200"><?php echo htmlspecialchars($ctaEbookDesc); ?></textarea>
+                </div>
+
+                <div class="space-y-3">
+                    <label for="cta_ebook_button" class="block text-xs font-semibold text-slate-400">Texto del Botón de Descarga</label>
+                    <input type="text" id="cta_ebook_button" name="cta_ebook_button" required 
+                           value="<?php echo htmlspecialchars($ctaEbookButton); ?>" 
+                           class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-semibold text-slate-800 dark:text-slate-200">
+                </div>
+
+                <div class="space-y-3">
+                    <label for="cta_ebook_link" class="block text-xs font-semibold text-slate-400">Enlace de Descarga del eBook (URL)</label>
+                    <input type="text" id="cta_ebook_link" name="cta_ebook_link" required 
+                           value="<?php echo htmlspecialchars($ctaEbookLink); ?>" 
+                           class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-mono font-bold text-slate-800 dark:text-slate-200">
+                    <p class="text-xs text-slate-400">Introduce la URL del archivo PDF o recurso que se descargará al hacer clic en el botón.</p>
+                </div>
+            </div>
+
             <!-- Botones de Acción -->
             <div class="pt-6 border-t border-slate-200/50 dark:border-slate-800/80 flex items-center justify-end gap-3">
                 <a href="/?route=admin/dashboard" class="btn-secondary text-sm rounded-xl py-2.5 px-5">Cancelar</a>

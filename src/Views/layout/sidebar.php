@@ -7,21 +7,6 @@ $recentPosts = Post::latest(4);
 ?>
 <aside class="space-y-8 lg:sticky lg:top-28">
     
-    <!-- Widget: Newsletter -->
-    <div class="glass-card rounded-3xl p-6 border border-slate-100 dark:border-slate-800/80">
-        <h3 class="text-lg font-bold mb-2 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-            Únete a la newsletter
-        </h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            Recibe artículos sobre diseño web y programación directamente en tu bandeja de entrada. Sin spam.
-        </p>
-        <form onsubmit="event.preventDefault(); alert('¡Gracias por suscribirte!');" class="space-y-3">
-            <input type="email" placeholder="Tu correo electrónico" required class="w-full px-4 py-2.5 text-sm bg-slate-100 dark:bg-slate-950 border border-transparent focus:border-brand-500 rounded-xl focus:outline-none transition-colors">
-            <button type="submit" class="w-full btn-primary py-2 text-sm rounded-xl">
-                Suscribirse
-            </button>
-        </form>
-    </div>
 
     <!-- Widget: Categorías -->
     <div class="glass-card rounded-3xl p-6 border border-slate-100 dark:border-slate-800/80">

@@ -177,6 +177,12 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
                 <?php endif; ?>
             </a>
 
+            <!-- CTA eBook -->
+            <a href="/?route=admin/cta-ebook" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo $currentRoute === 'admin/cta-ebook' ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                CTA eBook
+            </a>
+
             <!-- Identidad del Sitio -->
             <a href="/?route=admin/settings" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo $currentRoute === 'admin/settings' ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-3"></path></svg>
@@ -213,6 +219,11 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
 
             <!-- Perfil del Administrador -->
             <div class="flex items-center gap-3.5">
+                <?php if (isset($headerActions)): ?>
+                    <div class="mr-4">
+                        <?php echo $headerActions; ?>
+                    </div>
+                <?php endif; ?>
                 <div class="flex flex-col text-right hidden sm:flex">
                     <span class="text-sm font-bold text-white"><?php echo htmlspecialchars($adminName); ?></span>
                     <span class="text-xs text-white/65 font-medium">@<?php echo htmlspecialchars($adminUser); ?></span>

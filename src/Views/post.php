@@ -49,7 +49,7 @@ require __DIR__ . '/layout/header.php';
             <div class="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/80 pb-6">
                 <div class="flex items-center gap-1">
                     <span>Autor:</span>
-                    <span class="font-semibold text-brand-600 dark:text-brand-400"><?php echo htmlspecialchars($post->getAuthor()->display_name); ?></span>
+                    <a href="/?route=page&slug=sobre-el-autor" class="font-semibold text-brand-600 dark:text-brand-400 hover:underline"><?php echo htmlspecialchars($post->getAuthor()->display_name); ?></a>
                 </div>
                 <span>&bull;</span>
                 <span><?php echo Helpers::formatDate($post->created_at); ?></span>
@@ -68,41 +68,160 @@ require __DIR__ . '/layout/header.php';
             <?php echo $post->content; ?>
         </article>
 
-        <!-- Caja de Autor (WordPress Author Box) -->
-        <div class="glass-card rounded-3xl p-6 border border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-secondary-600 flex items-center justify-center text-white text-2xl font-bold uppercase shadow-md shadow-brand-500/10 flex-shrink-0">
-                <?php echo substr($post->getAuthor()->display_name, 0, 1); ?>
-            </div>
-            <div class="space-y-2 text-center sm:text-left">
-                <h4 class="font-bold text-slate-800 dark:text-slate-200">
-                    Escrito por <span class="text-brand-600 dark:text-brand-400"><?php echo htmlspecialchars($post->getAuthor()->display_name); ?></span>
-                </h4>
-                <p class="text-sm text-slate-500 dark:text-slate-400">
-                    <?php echo htmlspecialchars($post->getAuthor()->bio ?? 'Autor del blog. Apasionado por compartir conocimiento e inspirar a la comunidad web.'); ?>
-                </p>
-            </div>
-        </div>
 
         <!-- Sección de Posts Relacionados -->
         <?php if (!empty($relatedPosts)): ?>
-            <div class="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800/80">
+            <div class="space-y-6 pt-10 border-t border-slate-100 dark:border-slate-800/80">
                 <h3 class="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
                     Te puede interesar
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <?php foreach($relatedPosts as $rPost): ?>
-                        <a href="/?route=post&slug=<?php echo $rPost->slug; ?>" class="glass-card rounded-2xl overflow-hidden p-4 border border-slate-100 dark:border-slate-900/60 block hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-                            <div class="aspect-video w-full rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden mb-3">
-                                <?php if ($rPost->featured_image): ?>
-                                    <img src="<?php echo Helpers::asset('uploads/' . $rPost->featured_image); ?>" alt="<?php echo htmlspecialchars($rPost->title); ?>" class="w-full h-full object-cover">
-                                <?php endif; ?>
-                            </div>
-                            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-2 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
-                                <?php echo htmlspecialchars($rPost->title); ?>
-                            </h4>
-                        </a>
-                    <?php endforeach; ?>
+                
+                <style>
+                    .related-carousel::-webkit-scrollbar {
+                        display: none;
+                    }
+                    .related-carousel {
+                        -ms-overflow-style: none;
+                        scrollbar-width: none;
+                    }
+                    .carousel-card {
+                        width: 100%;
+                        flex-shrink: 0;
+                    }
+                    .carousel-wrapper {
+                        position: relative;
+                        padding-left: 48px;
+                        padding-right: 48px;
+                    }
+                    .carousel-btn-prev {
+                        position: absolute;
+                        left: 8px;
+                        top: 40%;
+                        transform: translateY(-50%);
+                        z-index: 10;
+                        border: none;
+                        background: transparent;
+                        padding: 6px;
+                        cursor: pointer;
+                        color: rgb(var(--brand-600));
+                    }
+                    .carousel-btn-next {
+                        position: absolute;
+                        right: 8px;
+                        top: 40%;
+                        transform: translateY(-50%);
+                        z-index: 10;
+                        border: none;
+                        background: transparent;
+                        padding: 6px;
+                        cursor: pointer;
+                        color: rgb(var(--brand-600));
+                    }
+                    @media (min-width: 768px) {
+                        .carousel-card {
+                            width: calc((100% - 24px) / 2);
+                        }
+                    }
+                    @media (min-width: 1024px) {
+                        .carousel-card {
+                            width: calc((100% - 48px) / 3);
+                        }
+                        .carousel-wrapper {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                        }
+                        .carousel-btn-prev {
+                            left: -40px;
+                        }
+                        .carousel-btn-next {
+                            right: -40px;
+                        }
+                    }
+                </style>
+
+                <!-- Contenedor relativo del carrusel con flechas laterales responsivas -->
+                <div class="carousel-wrapper group">
+                    
+                    <!-- Contenedor del Carrusel -->
+                    <div id="related-carousel" class="related-carousel flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth py-2">
+                        <?php foreach($relatedPosts as $rPost): ?>
+                            <article class="carousel-card glass-card rounded-3xl overflow-hidden card-hover border border-slate-100 dark:border-slate-900/60 flex flex-col justify-between h-auto snap-start">
+                                <!-- Miniatura -->
+                                <a href="/?route=post&slug=<?php echo $rPost->slug; ?>" class="block aspect-video bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
+                                    <?php if ($rPost->featured_image): ?>
+                                        <img src="<?php echo Helpers::asset('uploads/' . $rPost->featured_image); ?>" alt="<?php echo htmlspecialchars($rPost->title); ?>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                                    <?php endif; ?>
+                                    
+                                    <!-- Insignia de categoría -->
+                                    <span class="absolute top-4 left-4 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white bg-slate-900/80 backdrop-blur-md">
+                                        <?php echo htmlspecialchars($rPost->getCategory()->name); ?>
+                                    </span>
+                                </a>
+
+                                <!-- Cuerpo del Post -->
+                                <div class="p-6 flex flex-col flex-grow justify-between">
+                                    <div class="space-y-3">
+                                        <!-- Título -->
+                                        <h4 class="text-base font-bold text-slate-800 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 transition-colors leading-snug">
+                                            <a href="/?route=post&slug=<?php echo $rPost->slug; ?>">
+                                                <?php echo htmlspecialchars($rPost->title); ?>
+                                            </a>
+                                        </h4>
+                                        
+                                        <!-- Fecha -->
+                                        <span class="text-xs text-slate-400 dark:text-slate-500 font-medium block">
+                                            <?php echo Helpers::formatDate($rPost->created_at); ?>
+                                        </span>
+                                        
+                                        <!-- Extracto (3 líneas de texto con line-clamp-3) -->
+                                        <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-3">
+                                            <?php echo htmlspecialchars($rPost->excerpt); ?>
+                                        </p>
+                                    </div>
+
+                                    <!-- Meta / Pie de la Tarjeta -->
+                                    <div class="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 font-medium mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold text-[10px] uppercase">
+                                                <?php echo substr($rPost->getAuthor()->display_name, 0, 1); ?>
+                                            </span>
+                                            <span><?php echo htmlspecialchars($rPost->getAuthor()->display_name); ?></span>
+                                        </div>
+                                        <a href="/?route=post&slug=<?php echo $rPost->slug; ?>" class="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-350 font-bold transition-colors inline-flex items-center gap-1">
+                                            Ver más
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <!-- Flechas de navegación posicionadas a los costados (Sin círculos, color de tema dinámico) -->
+                    <?php if (count($relatedPosts) > 1): ?>
+                        <!-- Botón Izquierdo (Anterior) -->
+                        <button onclick="scrollCarousel(-1)" class="carousel-btn-prev hover:opacity-75 active:scale-90 transition-all duration-200" title="Anterior">
+                            <svg style="width: 32px; height: 32px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <!-- Botón Derecho (Siguiente) -->
+                        <button onclick="scrollCarousel(1)" class="carousel-btn-next hover:opacity-75 active:scale-90 transition-all duration-200" title="Siguiente">
+                            <svg style="width: 32px; height: 32px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    <?php endif; ?>
                 </div>
+
+                <script>
+                    function scrollCarousel(direction) {
+                        const carousel = document.getElementById('related-carousel');
+                        const card = carousel.querySelector('article');
+                        if (!card) return;
+                        const cardWidth = card.offsetWidth + 24; // Ancho de la tarjeta + gap (24px)
+                        carousel.scrollBy({
+                            left: direction * cardWidth,
+                            behavior: 'smooth'
+                        });
+                    }
+                </script>
             </div>
         <?php endif; ?>
 
