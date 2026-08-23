@@ -211,7 +211,62 @@ require __DIR__ . '/layout/header.php';
                     <input type="text" id="cta_ebook_link" name="cta_ebook_link" required 
                            value="<?php echo htmlspecialchars($ctaEbookLink); ?>" 
                            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-mono font-bold text-slate-800 dark:text-slate-200">
-                    <p class="text-xs text-slate-400">Introduce la URL del archivo PDF o recurso que se descargará al hacer clic en el botón.</p>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 6: REDES SOCIALES (FOOTER) -->
+            <div class="space-y-4 pt-2">
+                <h3 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider border-b border-slate-200/50 dark:border-slate-800/50 pb-2">Redes Sociales (Mostrar en el Footer)</h3>
+                <p class="text-xs text-slate-400">Deja el campo vacío para no mostrar la red social correspondiente en el pie de página.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Facebook -->
+                    <div class="space-y-3">
+                        <label for="social_facebook" class="block text-xs font-semibold text-slate-400">URL de Facebook</label>
+                        <input type="text" id="social_facebook" name="social_facebook" placeholder="https://facebook.com/tu-pagina"
+                               value="<?php echo htmlspecialchars($socialFacebook ?? ''); ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-medium text-slate-800 dark:text-slate-200">
+                    </div>
+
+                    <!-- Instagram -->
+                    <div class="space-y-3">
+                        <label for="social_instagram" class="block text-xs font-semibold text-slate-400">URL de Instagram</label>
+                        <input type="text" id="social_instagram" name="social_instagram" placeholder="https://instagram.com/tu-usuario"
+                               value="<?php echo htmlspecialchars($socialInstagram ?? ''); ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-medium text-slate-800 dark:text-slate-200">
+                    </div>
+
+                    <!-- Twitter / X -->
+                    <div class="space-y-3">
+                        <label for="social_twitter" class="block text-xs font-semibold text-slate-400">URL de Twitter / X</label>
+                        <input type="text" id="social_twitter" name="social_twitter" placeholder="https://x.com/tu-usuario"
+                               value="<?php echo htmlspecialchars($socialTwitter ?? ''); ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-medium text-slate-800 dark:text-slate-200">
+                    </div>
+
+                    <!-- LinkedIn -->
+                    <div class="space-y-3">
+                        <label for="social_linkedin" class="block text-xs font-semibold text-slate-400">URL de LinkedIn</label>
+                        <input type="text" id="social_linkedin" name="social_linkedin" placeholder="https://linkedin.com/in/tu-perfil"
+                               value="<?php echo htmlspecialchars($socialLinkedin ?? ''); ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-medium text-slate-800 dark:text-slate-200">
+                    </div>
+
+                    <!-- YouTube -->
+                    <div class="space-y-3">
+                        <label for="social_youtube" class="block text-xs font-semibold text-slate-400">URL de YouTube</label>
+                        <input type="text" id="social_youtube" name="social_youtube" placeholder="https://youtube.com/c/tu-canal"
+                               value="<?php echo htmlspecialchars($socialYoutube ?? ''); ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-medium text-slate-800 dark:text-slate-200">
+                    </div>
+
+                    <!-- GitHub -->
+                    <div class="space-y-3">
+                        <label for="social_github" class="block text-xs font-semibold text-slate-400">URL de GitHub</label>
+                        <input type="text" id="social_github" name="social_github" placeholder="https://github.com/tu-usuario"
+                               value="<?php echo htmlspecialchars($socialGithub ?? ''); ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-medium text-slate-800 dark:text-slate-200">
+                    </div>
                 </div>
             </div>
 

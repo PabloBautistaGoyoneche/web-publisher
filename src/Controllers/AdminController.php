@@ -733,13 +733,20 @@ class AdminController {
             $ctaEbookButton = trim($_POST['cta_ebook_button'] ?? '');
             $ctaEbookLink = trim($_POST['cta_ebook_link'] ?? '');
 
+            $socialFacebook = trim($_POST['social_facebook'] ?? '');
+            $socialInstagram = trim($_POST['social_instagram'] ?? '');
+            $socialTwitter = trim($_POST['social_twitter'] ?? '');
+            $socialLinkedin = trim($_POST['social_linkedin'] ?? '');
+            $socialYoutube = trim($_POST['social_youtube'] ?? '');
+            $socialGithub = trim($_POST['social_github'] ?? '');
+
             // Validar formato hexadecimal
             $hexPattern = '/^#[0-9a-fA-F]{6}$/';
 
             if (empty($siteName) || empty($themeLight) || empty($themeLightSec) || empty($themeDark) || empty($themeDarkSec) || 
                 empty($themeLightBg) || empty($themeDarkBg) || empty($themeLightHeader) || empty($themeDarkHeader) || 
                 empty($themeLightFooter) || empty($themeDarkFooter) || empty($ctaEbookTitle) || empty($ctaEbookDesc) || empty($ctaEbookButton) || empty($ctaEbookLink)) {
-                $error = 'Por favor, completa todos los campos.';
+                $error = 'Por favor, completa todos los campos obligatorios.';
             } elseif (!preg_match($hexPattern, $themeLight) || !preg_match($hexPattern, $themeLightSec) || 
                       !preg_match($hexPattern, $themeDark) || !preg_match($hexPattern, $themeDarkSec) || 
                       !preg_match($hexPattern, $themeLightBg) || !preg_match($hexPattern, $themeDarkBg) || 
@@ -763,6 +770,14 @@ class AdminController {
                 \App\Models\Setting::set('cta_ebook_desc', $ctaEbookDesc);
                 \App\Models\Setting::set('cta_ebook_button', $ctaEbookButton);
                 \App\Models\Setting::set('cta_ebook_link', $ctaEbookLink);
+
+                \App\Models\Setting::set('social_facebook', $socialFacebook);
+                \App\Models\Setting::set('social_instagram', $socialInstagram);
+                \App\Models\Setting::set('social_twitter', $socialTwitter);
+                \App\Models\Setting::set('social_linkedin', $socialLinkedin);
+                \App\Models\Setting::set('social_youtube', $socialYoutube);
+                \App\Models\Setting::set('social_github', $socialGithub);
+
                 $success = true;
             }
         }
@@ -789,6 +804,13 @@ class AdminController {
         $ctaEbookButton = \App\Models\Setting::get('cta_ebook_button', 'Descargar eBook');
         $ctaEbookLink = \App\Models\Setting::get('cta_ebook_link', '#');
 
+        $socialFacebook = \App\Models\Setting::get('social_facebook', '');
+        $socialInstagram = \App\Models\Setting::get('social_instagram', '');
+        $socialTwitter = \App\Models\Setting::get('social_twitter', '');
+        $socialLinkedin = \App\Models\Setting::get('social_linkedin', '');
+        $socialYoutube = \App\Models\Setting::get('social_youtube', '');
+        $socialGithub = \App\Models\Setting::get('social_github', '');
+
         $this->render('admin/settings', [
             'title' => 'Identidad del Sitio - Admin Panel',
             'siteName' => $siteName,
@@ -806,6 +828,12 @@ class AdminController {
             'ctaEbookDesc' => $ctaEbookDesc,
             'ctaEbookButton' => $ctaEbookButton,
             'ctaEbookLink' => $ctaEbookLink,
+            'socialFacebook' => $socialFacebook,
+            'socialInstagram' => $socialInstagram,
+            'socialTwitter' => $socialTwitter,
+            'socialLinkedin' => $socialLinkedin,
+            'socialYoutube' => $socialYoutube,
+            'socialGithub' => $socialGithub,
             'error' => $error,
             'success' => $success
         ]);
