@@ -1,5 +1,11 @@
 <?php
 
+$configPath = dirname(__DIR__) . '/config/database.php';
+if (!file_exists($configPath)) {
+    header("Location: install.php");
+    exit;
+}
+
 // Iniciar almacenamiento en búfer para reescribir URLs sobre la marcha a amigables
 ob_start('rewriteUrls');
 
@@ -35,6 +41,59 @@ spl_autoload_register(function ($class) {
     if (file_exists($file)) {
         require $file;
     }
+});
+
+// Registro de manejadores de errores y excepciones globales
+set_exception_handler(function (\Throwable $e) {
+    \App\Logger::log('error', $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTraceAsString());
+    
+    // Si es una petición AJAX (por ejemplo, del actualizador), retornar un JSON limpio con el error
+    if (isset($_GET['ajax']) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') || (isset($_GET['route']) && strpos($_GET['route'], 'admin/update/api') !== false)) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+        exit;
+    }
+    
+    http_response_code(505);
+    echo "<div style='padding: 24px; font-family: sans-serif; background: #0f172a; color: #f1f5f9; border: 1px solid #334155; border-radius: 16px; max-width: 600px; margin: 60px auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);'>";
+    echo "<h2 style='margin-top: 0; color: #ef4444; font-size: 20px; font-weight: 800;'>Error de Ejecución (500)</h2>";
+    echo "<p style='font-size: 14px; color: #94a3b8; line-height: 1.6;'>Ha ocurrido una excepción inesperada en el servidor de la aplicación.</p>";
+    echo "<div style='background: #1e293b; padding: 16px; border-radius: 12px; border: 1px solid #334155; font-family: monospace; font-size: 12px; color: #f87171; overflow-x: auto; margin: 16px 0; word-break: break-all;'>";
+    echo "<strong>Excepción:</strong> " . htmlspecialchars($e->getMessage()) . "<br><br>";
+    echo "<strong>Ubicación:</strong> " . htmlspecialchars($e->getFile()) . " en la línea " . $e->getLine();
+    echo "</div>";
+    echo "<p style='font-size: 12px; color: #64748b;'>El error ha sido registrado en la bitácora administrativa para su revisión y solución.</p>";
+    echo "</div>";
+    exit;
+});
+
+set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) {
+    if (!(error_reporting() & $errno)) {
+        return false;
+    }
+    
+    $levels = [
+        E_ERROR             => 'error',
+        E_USER_ERROR        => 'error',
+        E_WARNING           => 'warning',
+        E_USER_WARNING      => 'warning',
+        E_NOTICE            => 'info',
+        E_USER_NOTICE       => 'info',
+        E_DEPRECATED        => 'info',
+        E_USER_DEPRECATED   => 'info'
+    ];
+    $level = $levels[$errno] ?? 'warning';
+    
+    \App\Logger::log($level, $errstr, $errfile, $errline);
+    
+    if ($level === 'error') {
+        exit(1);
+    }
+    
+    return false;
 });
 
 use App\Controllers\BlogController;
@@ -208,7 +267,12 @@ if (empty($route)) {
             'admin/pages/edit',
             'admin/pages/delete',
             'admin/messages',
-            'admin/messages/delete'
+            'admin/messages/delete',
+            'admin/update',
+            'admin/update/check',
+            'admin/update/api',
+            'admin/logs',
+            'admin/logs/clear'
         ];
         if (in_array($uriPath, $adminRoutes)) {
             $route = $uriPath;
@@ -270,6 +334,26 @@ try {
             
         case 'admin/settings':
             $admin->settings();
+            break;
+            
+        case 'admin/update':
+            $admin->update();
+            break;
+            
+        case 'admin/update/check':
+            $admin->checkUpdate();
+            break;
+            
+        case 'admin/update/api':
+            $admin->updateApi();
+            break;
+            
+        case 'admin/logs':
+            $admin->logs();
+            break;
+            
+        case 'admin/logs/clear':
+            $admin->clearLogs();
             break;
             
         case 'admin/cta-ebook':

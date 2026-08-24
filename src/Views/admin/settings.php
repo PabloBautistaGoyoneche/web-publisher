@@ -270,6 +270,29 @@ require __DIR__ . '/layout/header.php';
                 </div>
             </div>
 
+            <!-- SECCIÓN 7: VERSIÓN DEL SISTEMA -->
+            <div class="space-y-4 pt-2">
+                <h3 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider border-b border-slate-200/50 dark:border-slate-800/50 pb-2">Información del Sistema</h3>
+                <div class="p-4 bg-slate-100 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400 space-y-2">
+                    <div>
+                        <span class="font-bold">Repositorio GitHub:</span> 
+                        <span class="font-medium text-slate-700 dark:text-slate-300">PabloBautistaGoyoneche/web-publisher (rama: main)</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">Commit Actual Instalado:</span> 
+                        <code class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 rounded font-mono text-[10px] text-brand-600 dark:text-brand-400">
+                            <?php echo htmlspecialchars($currentCommit ?? 'initial'); ?>
+                        </code>
+                    </div>
+                    <div class="pt-2">
+                        <a href="/?route=admin/update/check" class="text-brand-600 dark:text-brand-400 font-bold hover:underline inline-flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.21"></path></svg>
+                            Buscar Actualizaciones de GitHub Ahora
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <!-- Botones de Acción -->
             <div class="pt-6 border-t border-slate-200/50 dark:border-slate-800/80 flex items-center justify-end gap-3">
                 <a href="/?route=admin/dashboard" class="btn-secondary text-sm rounded-xl py-2.5 px-5">Cancelar</a>

@@ -111,6 +111,17 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
             --siteheader: <?php echo \App\Helpers::hexToRgbValues($themeDarkHeader); ?>;
             --sitefooter: <?php echo \App\Helpers::hexToRgbValues($themeDarkFooter); ?>;
         }
+        @keyframes swing {
+            0%, 100% { transform: rotate(0); }
+            20% { transform: rotate(12deg); }
+            40% { transform: rotate(-8deg); }
+            60% { transform: rotate(4deg); }
+            80% { transform: rotate(-4deg); }
+        }
+        .animate-swing {
+            animation: swing 2s ease infinite;
+            transform-origin: top center;
+        }
     </style>
 </head>
 <body class="bg-sitebg text-slate-800 dark:text-slate-100 h-full flex flex-col md:flex-row overflow-hidden transition-colors duration-300">
@@ -189,6 +200,28 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
                 Identidad del Sitio
             </a>
 
+            <!-- Logs de Errores -->
+            <?php 
+            $logCountDb = 0;
+            try {
+                if (file_exists(dirname(dirname(dirname(__DIR__))) . '/config/database.php')) {
+                    $dbCount = \App\Database::getConnection();
+                    $logCountDb = (int)$dbCount->query("SELECT COUNT(*) FROM system_logs")->fetchColumn();
+                }
+            } catch (\Throwable $e) {}
+            ?>
+            <a href="/?route=admin/logs" class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo $currentRoute === 'admin/logs' ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+                <div class="flex items-center gap-3.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <span>Bitácora de Errores</span>
+                </div>
+                <?php if ($logCountDb > 0): ?>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $currentRoute === 'admin/logs' ? 'bg-white text-brand-600' : 'bg-red-500/20 text-red-500'; ?>">
+                        <?php echo $logCountDb; ?>
+                    </span>
+                <?php endif; ?>
+            </a>
+
         </nav>
 
         <!-- Acciones del pie de barra lateral -->
@@ -219,6 +252,20 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
 
             <!-- Perfil del Administrador -->
             <div class="flex items-center gap-3.5">
+                <!-- Campana de Notificación de Actualizaciones -->
+                <?php 
+                $hasUpdate = isset($_SESSION['github_update_available']) && $_SESSION['github_update_available'];
+                ?>
+                <a href="/?route=admin/update" class="relative p-2.5 rounded-xl hover:bg-white/10 text-white/70 hover:text-white transition-all mr-2 group" title="<?php echo $hasUpdate ? 'Actualización Disponible' : 'Sistema al día'; ?>">
+                    <svg class="w-5 h-5 <?php echo $hasUpdate ? 'animate-swing' : ''; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    <?php if ($hasUpdate): ?>
+                        <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-slate-900 rounded-full animate-ping"></span>
+                        <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-slate-900 rounded-full"></span>
+                    <?php endif; ?>
+                </a>
+
                 <?php if (isset($headerActions)): ?>
                     <div class="mr-4">
                         <?php echo $headerActions; ?>

@@ -3,6 +3,35 @@ use App\Helpers;
 require __DIR__ . '/layout/header.php';
 ?>
 
+<?php if (isset($_SESSION['update_success'])): ?>
+    <div class="mb-6 p-4 bg-emerald-950/40 border border-emerald-900/50 text-emerald-400 text-xs font-medium rounded-2xl flex items-center gap-3">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+        <span><?php echo htmlspecialchars($_SESSION['update_success']); ?></span>
+    </div>
+    <?php unset($_SESSION['update_success']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['update_error'])): ?>
+    <div class="mb-6 p-4 bg-red-950/40 border border-red-900/50 text-red-400 text-xs font-medium rounded-2xl flex items-center gap-3">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <span><?php echo htmlspecialchars($_SESSION['update_error']); ?></span>
+    </div>
+    <?php unset($_SESSION['update_error']); ?>
+<?php endif; ?>
+
+<?php if (isset($updateAvailable) && $updateAvailable): ?>
+    <div class="mb-8 p-6 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-3xl text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="space-y-1">
+            <h3 class="text-lg font-bold">¡Nueva actualización disponible!</h3>
+            <p class="text-sm text-violet-100">Hay un nuevo commit en el repositorio de GitHub: <code class="bg-violet-800 px-1.5 py-0.5 rounded font-mono text-xs"><?php echo substr($latestCommitSha, 0, 7); ?></code>. Puedes aplicar los cambios y ejecutar las migraciones automáticamente ahora.</p>
+        </div>
+        <a href="/?route=admin/update" class="w-full sm:w-auto px-5 py-3 bg-white text-violet-700 hover:bg-violet-50 text-sm font-semibold rounded-2xl text-center shadow-md active:scale-95 transition-all flex items-center justify-center gap-2">
+            <svg class="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Actualizar Ahora
+        </a>
+    </div>
+<?php endif; ?>
+
 <!-- Sección: Cabecera con saludo -->
 <div class="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div>

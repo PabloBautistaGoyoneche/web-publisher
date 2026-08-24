@@ -92,6 +92,32 @@ class AdminController {
     public function dashboard(): void {
         $this->checkAuth();
 
+        $githubOwner = 'PabloBautistaGoyoneche';
+        $githubRepo = 'web-publisher';
+        $githubBranch = 'main';
+        $githubToken = '';
+        $currentCommit = \App\Models\Setting::get('current_commit', 'initial');
+
+        $updateAvailable = false;
+        $latestCommitSha = null;
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        if (isset($_SESSION['github_update_available']) && isset($_SESSION['github_latest_commit']) && isset($_SESSION['github_last_checked']) && ($_SESSION['github_last_checked'] > time() - 3600)) {
+            $updateAvailable = $_SESSION['github_update_available'];
+            $latestCommitSha = $_SESSION['github_latest_commit'];
+        } else {
+            $latestCommitSha = $this->fetchLatestCommitSha($githubOwner, $githubRepo, $githubBranch, $githubToken);
+            if ($latestCommitSha && $latestCommitSha !== $currentCommit) {
+                $updateAvailable = true;
+            }
+            $_SESSION['github_update_available'] = $updateAvailable;
+            $_SESSION['github_latest_commit'] = $latestCommitSha;
+            $_SESSION['github_last_checked'] = time();
+        }
+
         $stats = [
             'posts' => Post::count(),
             'comments' => Comment::count(),
@@ -108,7 +134,9 @@ class AdminController {
             'title' => 'Dashboard - Admin Panel',
             'stats' => $stats,
             'latestComments' => $latestComments,
-            'recentPosts' => $recentPosts
+            'recentPosts' => $recentPosts,
+            'updateAvailable' => $updateAvailable,
+            'latestCommitSha' => $latestCommitSha
         ]);
     }
 
@@ -811,6 +839,8 @@ class AdminController {
         $socialYoutube = \App\Models\Setting::get('social_youtube', '');
         $socialGithub = \App\Models\Setting::get('social_github', '');
 
+        $currentCommit = \App\Models\Setting::get('current_commit', 'initial');
+
         $this->render('admin/settings', [
             'title' => 'Identidad del Sitio - Admin Panel',
             'siteName' => $siteName,
@@ -834,6 +864,7 @@ class AdminController {
             'socialLinkedin' => $socialLinkedin,
             'socialYoutube' => $socialYoutube,
             'socialGithub' => $socialGithub,
+            'currentCommit' => $currentCommit,
             'error' => $error,
             'success' => $success
         ]);
@@ -930,6 +961,317 @@ class AdminController {
             'error' => $error,
             'success' => $success
         ]);
+    }
+
+    public function checkUpdate(): void {
+        $this->checkAuth();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        unset($_SESSION['github_update_available']);
+        unset($_SESSION['github_latest_commit']);
+        unset($_SESSION['github_last_checked']);
+        header("Location: /?route=admin/dashboard");
+        exit;
+    }
+
+    public function update(): void {
+        $this->checkAuth();
+        $this->render('admin/update', [
+            'title' => 'Actualizando Sistema - Admin Panel'
+        ]);
+    }
+
+    public function updateApi(): void {
+        $this->checkAuth();
+        header('Content-Type: application/json');
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $githubOwner = 'PabloBautistaGoyoneche';
+        $githubRepo = 'web-publisher';
+        $githubBranch = 'main';
+        $githubToken = '';
+
+        $action = $_GET['action'] ?? '';
+
+        try {
+            switch ($action) {
+                case 'download':
+                    $latestCommitSha = $this->fetchLatestCommitSha($githubOwner, $githubRepo, $githubBranch, $githubToken);
+                    if (!$latestCommitSha) {
+                        throw new \Exception("No se pudo conectar a GitHub para verificar el commit.");
+                    }
+
+                    $zipUrl = "https://api.github.com/repos/{$githubOwner}/{$githubRepo}/zipball/{$githubBranch}";
+                    $tmpZip = tempnam(sys_get_temp_dir(), 'update_') . '.zip';
+
+                    if (!$this->downloadZip($zipUrl, $tmpZip, $githubToken)) {
+                        @unlink($tmpZip);
+                        throw new \Exception("Error al descargar el paquete ZIP desde GitHub.");
+                    }
+
+                    $_SESSION['update_zip_path'] = $tmpZip;
+                    $_SESSION['update_latest_commit'] = $latestCommitSha;
+
+                    echo json_encode([
+                        'success' => true,
+                        'commit_short_sha' => substr($latestCommitSha, 0, 7)
+                    ]);
+                    break;
+
+                case 'extract':
+                    $tmpZip = $_SESSION['update_zip_path'] ?? '';
+                    if (empty($tmpZip) || !file_exists($tmpZip)) {
+                        throw new \Exception("No se encontró el archivo ZIP descargado en la sesión.");
+                    }
+
+                    $extractDir = sys_get_temp_dir() . '/update_extracted_' . time();
+                    $zip = new \ZipArchive();
+                    if ($zip->open($tmpZip) === true) {
+                        $zip->extractTo($extractDir);
+                        $zip->close();
+                    } else {
+                        @unlink($tmpZip);
+                        throw new \Exception("No se pudo extraer el ZIP descargado.");
+                    }
+
+                    $_SESSION['update_extract_dir'] = $extractDir;
+
+                    echo json_encode(['success' => true]);
+                    break;
+
+                case 'install':
+                    $extractDir = $_SESSION['update_extract_dir'] ?? '';
+                    if (empty($extractDir) || !is_dir($extractDir)) {
+                        throw new \Exception("No se encontró el directorio de extracción temporal.");
+                    }
+
+                    $subdirs = glob($extractDir . '/*', GLOB_ONLYDIR);
+                    if (empty($subdirs)) {
+                        throw new \Exception("La estructura del ZIP de GitHub es incorrecta.");
+                    }
+                    $repoDir = $subdirs[0];
+
+                    // Copiar archivos
+                    $appRoot = dirname(__DIR__);
+                    $this->copyFolder($repoDir, $appRoot);
+
+                    // Ejecutar migraciones SQL
+                    $migrationsCount = 0;
+                    $migrationsDir = $appRoot . '/src/Migrations';
+                    if (is_dir($migrationsDir)) {
+                        $db = \App\Database::getConnection();
+                        
+                        $db->exec("CREATE TABLE IF NOT EXISTS migrations (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            migration VARCHAR(100) NOT NULL UNIQUE,
+                            executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        )");
+
+                        $files = glob($migrationsDir . '/*.sql');
+                        sort($files);
+
+                        foreach ($files as $file) {
+                            $filename = basename($file);
+                            $stmt = $db->prepare("SELECT COUNT(*) FROM migrations WHERE migration = :name");
+                            $stmt->execute(['name' => $filename]);
+                            if ($stmt->fetchColumn() == 0) {
+                                $sql = file_get_contents($file);
+                                if (!empty(trim($sql))) {
+                                    $db->exec($sql);
+                                }
+                                $stmt = $db->prepare("INSERT INTO migrations (migration) VALUES (:name)");
+                                $stmt->execute(['name' => $filename]);
+                                $migrationsCount++;
+                            }
+                        }
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'migrations_count' => $migrationsCount
+                    ]);
+                    break;
+
+                case 'cleanup':
+                    $tmpZip = $_SESSION['update_zip_path'] ?? '';
+                    $extractDir = $_SESSION['update_extract_dir'] ?? '';
+                    $latestCommitSha = $_SESSION['update_latest_commit'] ?? '';
+
+                    if (!empty($tmpZip) && file_exists($tmpZip)) {
+                        @unlink($tmpZip);
+                    }
+                    if (!empty($extractDir) && is_dir($extractDir)) {
+                        $this->removeFolder($extractDir);
+                    }
+
+                    if (!empty($latestCommitSha)) {
+                        \App\Models\Setting::set('current_commit', $latestCommitSha);
+                    }
+
+                    unset($_SESSION['update_zip_path']);
+                    unset($_SESSION['update_extract_dir']);
+                    unset($_SESSION['update_latest_commit']);
+                    unset($_SESSION['github_update_available']);
+                    unset($_SESSION['github_latest_commit']);
+                    unset($_SESSION['github_last_checked']);
+
+                    echo json_encode(['success' => true]);
+                    break;
+
+                default:
+                    throw new \Exception("Acción de actualización no válida.");
+            }
+        } catch (\Exception $e) {
+            // Intentar limpiar en caso de error
+            $tmpZip = $_SESSION['update_zip_path'] ?? '';
+            $extractDir = $_SESSION['update_extract_dir'] ?? '';
+            if (!empty($tmpZip) && file_exists($tmpZip)) {
+                @unlink($tmpZip);
+            }
+            if (!empty($extractDir) && is_dir($extractDir)) {
+                $this->removeFolder($extractDir);
+            }
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+
+    public function logs(): void {
+        $this->checkAuth();
+        
+        $db = \App\Database::getConnection();
+        
+        // Asegurar que la tabla exista
+        $db->exec("CREATE TABLE IF NOT EXISTS system_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            level VARCHAR(20) NOT NULL,
+            message TEXT NOT NULL,
+            file VARCHAR(255) DEFAULT NULL,
+            line INT DEFAULT NULL,
+            trace TEXT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )");
+
+        $stmt = $db->query("SELECT * FROM system_logs ORDER BY created_at DESC LIMIT 150");
+        $logs = $stmt->fetchAll();
+
+        $this->render('admin/logs', [
+            'title' => 'Bitácora de Errores - Admin Panel',
+            'logs' => $logs
+        ]);
+    }
+
+    public function clearLogs(): void {
+        $this->checkAuth();
+        
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        try {
+            $db = \App\Database::getConnection();
+            $db->exec("DELETE FROM system_logs");
+            $_SESSION['logs_success'] = "El historial de errores ha sido vaciado correctamente.";
+        } catch (\Throwable $e) {
+            $_SESSION['logs_error'] = "No se pudo vaciar la bitácora: " . $e->getMessage();
+        }
+
+        header("Location: /?route=admin/logs");
+        exit;
+    }
+
+    private function fetchLatestCommitSha(string $owner, string $repo, string $branch, string $token): ?string {
+        $url = "https://api.github.com/repos/$owner/$repo/commits/$branch";
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => [
+                    'User-Agent: Web-Publisher-App',
+                    'Accept: application/vnd.github.v3+json'
+                ]
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+            ]
+        ];
+        if (!empty($token)) {
+            $opts['http']['header'][] = "Authorization: token $token";
+        }
+        $context = stream_context_create($opts);
+        try {
+            $response = @file_get_contents($url, false, $context);
+            if ($response !== false) {
+                $data = json_decode($response, true);
+                return $data['sha'] ?? null;
+            }
+        } catch (\Exception $e) {}
+        return null;
+    }
+
+    private function downloadZip(string $url, string $destPath, string $token): bool {
+        $fp = fopen($destPath, 'w+');
+        if (!$fp) return false;
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Web-Publisher-App');
+        curl_setopt($ch, CURLOPT_FILE, $fp);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        if (!empty($token)) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: token $token"]);
+        }
+        $success = curl_exec($ch);
+        curl_close($ch);
+        fclose($fp);
+        return $success !== false;
+    }
+
+    private function copyFolder(string $src, string $dst) {
+        $dir = opendir($src);
+        @mkdir($dst);
+        while (false !== ($file = readdir($dir))) {
+            if (($file != '.') && ($file != '..')) {
+                if (is_dir($src . '/' . $file)) {
+                    if ($file === 'uploads' || $file === '.git' || $file === '.agents' || $file === '.gemini' || $file === 'node_modules') {
+                        continue;
+                    }
+                    $this->copyFolder($src . '/' . $file, $dst . '/' . $file);
+                } else {
+                    if ($file === 'database.php' && basename(dirname($src . '/' . $file)) === 'config') {
+                        continue;
+                    }
+                    copy($src . '/' . $file, $dst . '/' . $file);
+                }
+            }
+        }
+        closedir($dir);
+    }
+
+    private function removeFolder(string $dir) {
+        if (is_dir($dir)) {
+            $objects = scandir($dir);
+            foreach ($objects as $object) {
+                if ($object != "." && $object != "..") {
+                    if (is_dir($dir . "/" . $object) && !is_link($dir . "/" . $object))
+                        $this->removeFolder($dir . "/" . $object);
+                    else
+                        unlink($dir . "/" . $object);
+                }
+            }
+            rmdir($dir);
+        }
     }
 
     /**
