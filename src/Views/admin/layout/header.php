@@ -8,19 +8,19 @@ $currentRoute = $_GET['route'] ?? 'admin/dashboard';
 
 // Cargar variables de identidad del sitio
 $siteName = \App\Models\Setting::get('site_name', 'ModernBlog');
-$themeLight = \App\Models\Setting::get('theme_light_primary', '#7c3aed');
-$themeLightSec = \App\Models\Setting::get('theme_light_secondary', '#4f46e5');
-$themeDark = \App\Models\Setting::get('theme_dark_primary', '#a78bfa');
-$themeDarkSec = \App\Models\Setting::get('theme_dark_secondary', '#6366f1');
+$themeLight = \App\Models\Setting::get('theme_light_primary', '#0284C7');
+$themeLightSec = \App\Models\Setting::get('theme_light_secondary', '#0369A1');
+$themeDark = \App\Models\Setting::get('theme_dark_primary', '#38BDF8');
+$themeDarkSec = \App\Models\Setting::get('theme_dark_secondary', '#7DD3FC');
 
-$themeLightBg = \App\Models\Setting::get('theme_light_bg', '#f8fafc');
-$themeDarkBg = \App\Models\Setting::get('theme_dark_bg', '#020617');
+$themeLightBg = \App\Models\Setting::get('theme_light_bg', '#F0F9FF');
+$themeDarkBg = \App\Models\Setting::get('theme_dark_bg', '#082F49');
 
-$themeLightHeader = \App\Models\Setting::get('theme_light_header', '#ffffff');
-$themeDarkHeader = \App\Models\Setting::get('theme_dark_header', '#020617');
+$themeLightHeader = \App\Models\Setting::get('theme_light_header', '#006394');
+$themeDarkHeader = \App\Models\Setting::get('theme_dark_header', '#0F172A');
 
-$themeLightFooter = \App\Models\Setting::get('theme_light_footer', '#ffffff');
-$themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
+$themeLightFooter = \App\Models\Setting::get('theme_light_footer', '#006394');
+$themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#020617');
 ?>
 <!DOCTYPE html>
 <html lang="es" class="h-full">
@@ -122,6 +122,16 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
             animation: swing 2s ease infinite;
             transform-origin: top center;
         }
+        .sidebar-item-active {
+            border-left: 4px solid <?php echo $themeLight; ?> !important;
+            background-color: rgba(30, 41, 59, 0.8) !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+        }
+        .sidebar-item-inactive {
+            border-left: 4px solid transparent !important;
+            color: #94a3b8 !important;
+        }
     </style>
 </head>
 <body class="bg-sitebg text-slate-800 dark:text-slate-100 h-full flex flex-col md:flex-row overflow-hidden transition-colors duration-300">
@@ -145,57 +155,57 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
         <nav class="flex-grow py-6 px-4 space-y-1.5 overflow-y-auto">
             
             <!-- Dashboard -->
-            <a href="/?route=admin/dashboard" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo $currentRoute === 'admin/dashboard' ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+            <a href="/?route=admin/dashboard" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all <?php echo $currentRoute === 'admin/dashboard' ? 'sidebar-item-active' : 'sidebar-item-inactive hover:bg-slate-800/40 hover:text-white'; ?>">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path></svg>
                 Dashboard
             </a>
 
             <!-- Entradas -->
-            <a href="/?route=admin/posts" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo strpos($currentRoute, 'admin/posts') === 0 ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+            <a href="/?route=admin/posts" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all <?php echo strpos($currentRoute, 'admin/posts') === 0 ? 'sidebar-item-active' : 'sidebar-item-inactive hover:bg-slate-800/40 hover:text-white'; ?>">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
                 Entradas
             </a>
 
             <!-- Categorías -->
-            <a href="/?route=admin/categories" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo $currentRoute === 'admin/categories' ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+            <a href="/?route=admin/categories" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all <?php echo $currentRoute === 'admin/categories' ? 'sidebar-item-active' : 'sidebar-item-inactive hover:bg-slate-800/40 hover:text-white'; ?>">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 Categorías
             </a>
 
             <!-- Comentarios -->
-            <a href="/?route=admin/comments" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo $currentRoute === 'admin/comments' ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+            <a href="/?route=admin/comments" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all <?php echo $currentRoute === 'admin/comments' ? 'sidebar-item-active' : 'sidebar-item-inactive hover:bg-slate-800/40 hover:text-white'; ?>">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
                 Comentarios
             </a>
 
             <!-- Páginas -->
-            <a href="/?route=admin/pages" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo strpos($currentRoute, 'admin/pages') === 0 ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+            <a href="/?route=admin/pages" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all <?php echo strpos($currentRoute, 'admin/pages') === 0 ? 'sidebar-item-active' : 'sidebar-item-inactive hover:bg-slate-800/40 hover:text-white'; ?>">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 Páginas
             </a>
 
             <!-- Mensajes -->
             <?php $msgCount = \App\Models\Message::count(); ?>
-            <a href="/?route=admin/messages" class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo $currentRoute === 'admin/messages' ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+            <a href="/?route=admin/messages" class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all <?php echo $currentRoute === 'admin/messages' ? 'sidebar-item-active' : 'sidebar-item-inactive hover:bg-slate-800/40 hover:text-white'; ?>">
                 <div class="flex items-center gap-3.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                     <span>Mensajes</span>
                 </div>
                 <?php if ($msgCount > 0): ?>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $currentRoute === 'admin/messages' ? 'bg-white text-brand-600' : 'bg-brand-600 text-white'; ?>">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $currentRoute === 'admin/messages' ? 'bg-white text-brand-650' : 'bg-brand-600 text-white'; ?>">
                         <?php echo $msgCount; ?>
                     </span>
                 <?php endif; ?>
             </a>
 
             <!-- CTA eBook -->
-            <a href="/?route=admin/cta-ebook" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo $currentRoute === 'admin/cta-ebook' ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+            <a href="/?route=admin/cta-ebook" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all <?php echo $currentRoute === 'admin/cta-ebook' ? 'sidebar-item-active' : 'sidebar-item-inactive hover:bg-slate-800/40 hover:text-white'; ?>">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                 CTA eBook
             </a>
 
             <!-- Identidad del Sitio -->
-            <a href="/?route=admin/settings" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo $currentRoute === 'admin/settings' ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+            <a href="/?route=admin/settings" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all <?php echo $currentRoute === 'admin/settings' ? 'sidebar-item-active' : 'sidebar-item-inactive hover:bg-slate-800/40 hover:text-white'; ?>">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-3"></path></svg>
                 Identidad del Sitio
             </a>
@@ -209,15 +219,30 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
                     $logCountDb = (int)$dbCount->query("SELECT COUNT(*) FROM system_logs")->fetchColumn();
                 }
             } catch (\Throwable $e) {}
+            
+            $hasUpdate = isset($_SESSION['github_update_available']) && $_SESSION['github_update_available'];
             ?>
-            <a href="/?route=admin/logs" class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-colors <?php echo $currentRoute === 'admin/logs' ? 'bg-brand-600 text-white shadow-md shadow-brand-500/10' : 'hover:bg-slate-800 hover:text-white'; ?>">
+            <a href="/?route=admin/logs" class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all <?php echo $currentRoute === 'admin/logs' ? 'sidebar-item-active' : 'sidebar-item-inactive hover:bg-slate-800/40 hover:text-white'; ?>">
                 <div class="flex items-center gap-3.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     <span>Bitácora de Errores</span>
                 </div>
                 <?php if ($logCountDb > 0): ?>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $currentRoute === 'admin/logs' ? 'bg-white text-brand-600' : 'bg-red-500/20 text-red-500'; ?>">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $currentRoute === 'admin/logs' ? 'bg-white text-brand-650' : 'bg-red-500/20 text-red-500'; ?>">
                         <?php echo $logCountDb; ?>
+                    </span>
+                <?php endif; ?>
+            </a>
+
+            <!-- Actualización del Sistema -->
+            <a href="/?route=admin/update" class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all <?php echo $currentRoute === 'admin/update' ? 'sidebar-item-active' : 'sidebar-item-inactive hover:bg-slate-800/40 hover:text-white'; ?>">
+                <div class="flex items-center gap-3.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.914 13.784A8 8 0 1119.5 8.5M21 5v4h-4"></path></svg>
+                    <span>Actualización del Sistema</span>
+                </div>
+                <?php if ($hasUpdate): ?>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $currentRoute === 'admin/update' ? 'bg-white text-brand-650' : 'bg-amber-500/20 text-amber-500'; ?>">
+                        NUEVO
                     </span>
                 <?php endif; ?>
             </a>

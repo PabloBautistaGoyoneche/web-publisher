@@ -282,6 +282,8 @@ if (empty($route)) {
     }
 }
 
+$_GET['route'] = $route;
+
 $blog = new BlogController();
 $admin = new AdminController();
 

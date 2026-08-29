@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php 
         $siteName = \App\Models\Setting::get('site_name', 'ModernBlog');
-        $themeLight = \App\Models\Setting::get('theme_light_primary', '#7c3aed');
-        $themeDark = \App\Models\Setting::get('theme_dark_primary', '#a78bfa');
+        $themeLight = \App\Models\Setting::get('theme_light_primary', '#0284C7');
+        $themeDark = \App\Models\Setting::get('theme_dark_primary', '#38BDF8');
         echo htmlspecialchars($siteName) . ' - Iniciar Sesión'; 
+        // Force slate-900 background in root for consistent login theme
+        $_GET['theme_light_bg'] = '#0f172a';
     ?></title>
     <!-- Google Fonts & Tailwind -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">

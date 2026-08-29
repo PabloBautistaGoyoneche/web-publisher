@@ -9,19 +9,19 @@ use App\Helpers;
     
     <?php
     $siteName = \App\Models\Setting::get('site_name', 'ModernBlog');
-    $themeLight = \App\Models\Setting::get('theme_light_primary', '#7c3aed');
-    $themeLightSec = \App\Models\Setting::get('theme_light_secondary', '#4f46e5');
-    $themeDark = \App\Models\Setting::get('theme_dark_primary', '#a78bfa');
-    $themeDarkSec = \App\Models\Setting::get('theme_dark_secondary', '#6366f1');
+    $themeLight = \App\Models\Setting::get('theme_light_primary', '#0284C7');
+    $themeLightSec = \App\Models\Setting::get('theme_light_secondary', '#0369A1');
+    $themeDark = \App\Models\Setting::get('theme_dark_primary', '#38BDF8');
+    $themeDarkSec = \App\Models\Setting::get('theme_dark_secondary', '#7DD3FC');
     
-    $themeLightBg = \App\Models\Setting::get('theme_light_bg', '#f8fafc');
-    $themeDarkBg = \App\Models\Setting::get('theme_dark_bg', '#020617');
+    $themeLightBg = \App\Models\Setting::get('theme_light_bg', '#F0F9FF');
+    $themeDarkBg = \App\Models\Setting::get('theme_dark_bg', '#082F49');
     
-    $themeLightHeader = \App\Models\Setting::get('theme_light_header', '#ffffff');
-    $themeDarkHeader = \App\Models\Setting::get('theme_dark_header', '#020617');
+    $themeLightHeader = \App\Models\Setting::get('theme_light_header', '#006394');
+    $themeDarkHeader = \App\Models\Setting::get('theme_dark_header', '#0F172A');
     
-    $themeLightFooter = \App\Models\Setting::get('theme_light_footer', '#ffffff');
-    $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#0f172a');
+    $themeLightFooter = \App\Models\Setting::get('theme_light_footer', '#006394');
+    $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#020617');
     
     // Reemplazar nombre del sitio en el título de la página
     $pageTitle = isset($title) ? $title : $siteName;

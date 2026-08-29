@@ -977,8 +977,37 @@ class AdminController {
 
     public function update(): void {
         $this->checkAuth();
+        
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $githubOwner = 'PabloBautistaGoyoneche';
+        $githubRepo = 'web-publisher';
+        $githubBranch = 'main';
+        $githubToken = '';
+        
+        $currentCommit = \App\Models\Setting::get('current_commit', 'initial');
+        
+        // Obtener el último commit de la sesión si está guardado, o consultarlo
+        $latestCommit = $_SESSION['github_latest_commit'] ?? null;
+        $updateAvailable = $_SESSION['github_update_available'] ?? false;
+        
+        if (!$latestCommit) {
+            $latestCommit = $this->fetchLatestCommitSha($githubOwner, $githubRepo, $githubBranch, $githubToken);
+            if ($latestCommit) {
+                $_SESSION['github_latest_commit'] = $latestCommit;
+                $updateAvailable = ($latestCommit !== $currentCommit);
+                $_SESSION['github_update_available'] = $updateAvailable;
+                $_SESSION['github_last_checked'] = time();
+            }
+        }
+        
         $this->render('admin/update', [
-            'title' => 'Actualizando Sistema - Admin Panel'
+            'title' => 'Actualización de Sistema - Admin Panel',
+            'currentCommit' => $currentCommit,
+            'latestCommit' => $latestCommit,
+            'updateAvailable' => $updateAvailable
         ]);
     }
 
