@@ -30,7 +30,7 @@ require __DIR__ . '/layout/header.php';
                         <!-- Miniatura -->
                         <a href="/?route=post&slug=<?php echo $post->slug; ?>" class="block aspect-video bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
                             <?php if ($post->featured_image): ?>
-                                <img src="<?php echo Helpers::asset('uploads/' . $post->featured_image); ?>" alt="<?php echo htmlspecialchars($post->title); ?>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                                <img src="<?php echo Helpers::asset('uploads/' . $post->featured_image); ?>" alt="<?php echo htmlspecialchars(!empty($post->image_alt) ? $post->image_alt : $post->title); ?>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" loading="lazy">
                             <?php endif; ?>
                             
                             <!-- Insignia de Categoría -->

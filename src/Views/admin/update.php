@@ -46,6 +46,19 @@ require __DIR__ . '/layout/header.php';
                 <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed pt-2">
                     Al iniciar la actualización, el sistema descargará el código fuente desde GitHub y aplicará las migraciones de base de datos de manera fluida. Tus credenciales locales y archivos subidos no se verán afectados.
                 </p>
+
+                <div class="border-t border-slate-200 dark:border-slate-800/80 pt-4 space-y-2 text-xs text-slate-550 dark:text-slate-400">
+                    <div>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">Repositorio GitHub:</span> 
+                        <span class="font-medium">PabloBautistaGoyoneche/web-publisher (rama: main)</span>
+                    </div>
+                    <div class="pt-1">
+                        <a href="/?route=admin/update/check" class="text-brand-600 dark:text-brand-400 font-bold hover:underline inline-flex items-center gap-1.5 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.21"></path></svg>
+                            Buscar Actualizaciones de GitHub Ahora
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <div class="flex items-center justify-end gap-3">

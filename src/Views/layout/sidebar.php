@@ -129,9 +129,9 @@ $recentPosts = Post::latest(4);
             <?php foreach($recentPosts as $rPost): ?>
                 <a href="/?route=post&slug=<?php echo $rPost->slug; ?>" class="flex gap-3 group">
                     <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
-                        <?php if ($rPost->featured_image): ?>
-                            <img src="<?php echo Helpers::asset('uploads/' . $rPost->featured_image); ?>" alt="<?php echo htmlspecialchars($rPost->title); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
-                        <?php endif; ?>
+                            <?php if ($rPost->featured_image): ?>
+                                <img src="<?php echo Helpers::asset('uploads/' . $rPost->featured_image); ?>" alt="<?php echo htmlspecialchars(!empty($rPost->image_alt) ? $rPost->image_alt : $rPost->title); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" loading="lazy">
+                            <?php endif; ?>
                     </div>
                     <div class="flex flex-col justify-center min-w-0">
                         <span class="text-xs text-brand-600 dark:text-brand-400 font-semibold mb-0.5">

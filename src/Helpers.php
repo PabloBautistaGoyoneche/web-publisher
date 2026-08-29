@@ -111,4 +111,83 @@ class Helpers {
         $hexColor = self::adjustBrightness($hex, $percent);
         return self::hexToRgbValues($hexColor);
     }
+
+    /**
+     * Optimiza y redimensiona una imagen subida al servidor, convirtiéndola a WebP
+     * o comprimiendo un JPEG a un tamaño máximo para mejorar el rendimiento de carga (LCP).
+     */
+    public static function optimizeAndResizeImage(string $sourcePath, string $destPath, int $maxWidth = 1200, int $maxHeight = 1200, int $quality = 82): bool {
+        if (!extension_loaded('gd')) {
+            return copy($sourcePath, $destPath);
+        }
+
+        list($width, $height, $type) = getimagesize($sourcePath);
+        
+        switch ($type) {
+            case IMAGETYPE_JPEG:
+                $srcImage = imagecreatefromjpeg($sourcePath);
+                break;
+            case IMAGETYPE_PNG:
+                $srcImage = imagecreatefrompng($sourcePath);
+                break;
+            case IMAGETYPE_WEBP:
+                $srcImage = imagecreatefromwebp($sourcePath);
+                break;
+            default:
+                return copy($sourcePath, $destPath);
+        }
+
+        if (!$srcImage) {
+            return copy($sourcePath, $destPath);
+        }
+
+        // Calcular nuevas dimensiones manteniendo la relación de aspecto
+        $ratio = $width / $height;
+        if ($width > $maxWidth || $height > $maxHeight) {
+            if ($width / $maxWidth > $height / $maxHeight) {
+                $newWidth = $maxWidth;
+                $newHeight = round($maxWidth / $ratio);
+            } else {
+                $newHeight = $maxHeight;
+                $newWidth = round($maxHeight * $ratio);
+            }
+        } else {
+            $newWidth = $width;
+            $newHeight = $height;
+        }
+
+        // Crear lienzo vacío con color verdadero
+        $dstImage = imagecreatetruecolor($newWidth, $newHeight);
+
+        // Preservar transparencia para PNG y WebP
+        if ($type === IMAGETYPE_PNG || $type === IMAGETYPE_WEBP) {
+            imagealphablending($dstImage, false);
+            imagesavealpha($dstImage, true);
+            $transparent = imagecolorallocatealpha($dstImage, 255, 255, 255, 127);
+            imagefilledrectangle($dstImage, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+
+        // Redimensionar
+        imagecopyresampled($dstImage, $srcImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+        // Guardar la imagen optimizada
+        $ext = strtolower(pathinfo($destPath, PATHINFO_EXTENSION));
+        $success = false;
+
+        if ($ext === 'webp' && function_exists('imagewebp')) {
+            $success = imagewebp($dstImage, $destPath, $quality);
+        } elseif ($ext === 'png') {
+            // PNG usa un factor de compresión de 0 a 9
+            $pngQuality = 9 - round(($quality * 9) / 100);
+            $success = imagepng($dstImage, $destPath, $pngQuality);
+        } else {
+            $success = imagejpeg($dstImage, $destPath, $quality);
+        }
+
+        // Liberar memoria
+        imagedestroy($srcImage);
+        imagedestroy($dstImage);
+
+        return $success;
+    }
 }

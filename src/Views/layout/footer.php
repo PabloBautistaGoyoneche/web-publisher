@@ -6,22 +6,16 @@ use App\Helpers;
     <!-- Sección Call to Action (Descarga de eBook) de Ancho Completo -->
     <?php
     $activeCta = \App\Models\Cta::getActive();
-    if ($activeCta) {
+    if ($activeCta):
         $ctaTitle = $activeCta->title;
         $ctaText = $activeCta->description;
         $ctaButton = $activeCta->button_text;
         $ctaLink = $activeCta->link;
-    } else {
-        $ctaTitle = \App\Models\Setting::get('cta_ebook_title', 'Descarga nuestro eBook Gratuito');
-        $ctaText = \App\Models\Setting::get('cta_ebook_desc', 'Aprende los fundamentos del desarrollo web moderno con nuestra guía completa.');
-        $ctaButton = \App\Models\Setting::get('cta_ebook_button', 'Descargar eBook');
-        $ctaLink = \App\Models\Setting::get('cta_ebook_link', '#');
-    }
-    
-    $downloadUrl = $ctaLink;
-    if (!empty($ctaLink) && $ctaLink !== '#' && !str_starts_with($ctaLink, 'http://') && !str_starts_with($ctaLink, 'https://') && !str_starts_with($ctaLink, '/')) {
-        $downloadUrl = '/uploads/' . $ctaLink;
-    }
+        
+        $downloadUrl = $ctaLink;
+        if (!empty($ctaLink) && $ctaLink !== '#' && !str_starts_with($ctaLink, 'http://') && !str_starts_with($ctaLink, 'https://') && !str_starts_with($ctaLink, '/')) {
+            $downloadUrl = '/uploads/' . $ctaLink;
+        }
     ?>
     <section class="w-full bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800/50 py-16 transition-colors duration-300">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
@@ -47,6 +41,7 @@ use App\Helpers;
             </div>
         </div>
     </section>
+    <?php endif; ?>
 
     <!-- Footer Moderno -->
     <footer class="bg-sitefooter border-t border-slate-200/50 dark:border-slate-800/50 py-12 transition-colors duration-300">
@@ -201,24 +196,17 @@ use App\Helpers;
 
     <!-- Ventana Modal de eBook (Pop-up) -->
     <?php
-    if ($activeCta) {
+    if ($activeCta):
         $ctaTitleModal = $activeCta->title;
         $ctaTextModal = $activeCta->description;
         $ctaButtonModal = $activeCta->button_text;
         $ctaLinkModal = $activeCta->link;
         $ctaDelayModal = $activeCta->delay;
-    } else {
-        $ctaTitleModal = \App\Models\Setting::get('cta_ebook_title', 'Descarga nuestro eBook Gratuito');
-        $ctaTextModal = \App\Models\Setting::get('cta_ebook_desc', 'Aprende los fundamentos del desarrollo web moderno con nuestra guía completa.');
-        $ctaButtonModal = \App\Models\Setting::get('cta_ebook_button', 'Descargar eBook');
-        $ctaLinkModal = \App\Models\Setting::get('cta_ebook_link', '#');
-        $ctaDelayModal = (int)\App\Models\Setting::get('cta_ebook_delay', '5');
-    }
 
-    $downloadUrlModal = $ctaLinkModal;
-    if (!empty($ctaLinkModal) && $ctaLinkModal !== '#' && !str_starts_with($ctaLinkModal, 'http://') && !str_starts_with($ctaLinkModal, 'https://') && !str_starts_with($ctaLinkModal, '/')) {
-        $downloadUrlModal = '/uploads/' . $ctaLinkModal;
-    }
+        $downloadUrlModal = $ctaLinkModal;
+        if (!empty($ctaLinkModal) && $ctaLinkModal !== '#' && !str_starts_with($ctaLinkModal, 'http://') && !str_starts_with($ctaLinkModal, 'https://') && !str_starts_with($ctaLinkModal, '/')) {
+            $downloadUrlModal = '/uploads/' . $ctaLinkModal;
+        }
     ?>
     <div id="ebook-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
         <!-- Contenido de la Ventana Modal -->
@@ -290,6 +278,7 @@ use App\Helpers;
             }
         });
     </script>
+    <?php endif; ?>
 
     <!-- Lógica de control JS en frontend -->
     <script src="<?php echo Helpers::asset('js/main.js'); ?>"></script>

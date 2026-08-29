@@ -21,6 +21,7 @@ class Post {
     public ?string $seo_title = null;
     public ?string $seo_description = null;
     public ?string $seo_keywords = null;
+    public ?string $image_alt = null;
 
     // Cache instances to avoid multiple queries
     private ?User $author = null;
@@ -210,6 +211,7 @@ class Post {
         $post->seo_title = $row['seo_title'] ?? null;
         $post->seo_description = $row['seo_description'] ?? null;
         $post->seo_keywords = $row['seo_keywords'] ?? null;
+        $post->image_alt = $row['image_alt'] ?? null;
         $post->created_at = $row['created_at'];
         $post->updated_at = $row['updated_at'];
         return $post;
@@ -260,12 +262,13 @@ class Post {
         string $status,
         ?string $seoTitle = null,
         ?string $seoDescription = null,
-        ?string $seoKeywords = null
+        ?string $seoKeywords = null,
+        ?string $imageAlt = null
     ): bool {
         $db = Database::getConnection();
         $stmt = $db->prepare("
-            INSERT INTO posts (user_id, category_id, title, slug, excerpt, content, featured_image, status, seo_title, seo_description, seo_keywords) 
-            VALUES (:user_id, :category_id, :title, :slug, :excerpt, :content, :featured_image, :status, :seo_title, :seo_description, :seo_keywords)
+            INSERT INTO posts (user_id, category_id, title, slug, excerpt, content, featured_image, status, seo_title, seo_description, seo_keywords, image_alt) 
+            VALUES (:user_id, :category_id, :title, :slug, :excerpt, :content, :featured_image, :status, :seo_title, :seo_description, :seo_keywords, :image_alt)
         ");
         return $stmt->execute([
             'user_id' => $userId,
@@ -278,7 +281,8 @@ class Post {
             'status' => $status,
             'seo_title' => $seoTitle,
             'seo_description' => $seoDescription,
-            'seo_keywords' => $seoKeywords
+            'seo_keywords' => $seoKeywords,
+            'image_alt' => $imageAlt
         ]);
     }
 
@@ -296,7 +300,8 @@ class Post {
         string $status,
         ?string $seoTitle = null,
         ?string $seoDescription = null,
-        ?string $seoKeywords = null
+        ?string $seoKeywords = null,
+        ?string $imageAlt = null
     ): bool {
         $db = Database::getConnection();
         $stmt = $db->prepare("
@@ -310,7 +315,8 @@ class Post {
                 status = :status,
                 seo_title = :seo_title,
                 seo_description = :seo_description,
-                seo_keywords = :seo_keywords
+                seo_keywords = :seo_keywords,
+                image_alt = :image_alt
             WHERE id = :id
         ");
         return $stmt->execute([
@@ -324,7 +330,8 @@ class Post {
             'status' => $status,
             'seo_title' => $seoTitle,
             'seo_description' => $seoDescription,
-            'seo_keywords' => $seoKeywords
+            'seo_keywords' => $seoKeywords,
+            'image_alt' => $imageAlt
         ]);
     }
 

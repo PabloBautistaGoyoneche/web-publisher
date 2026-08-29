@@ -386,11 +386,17 @@ require __DIR__ . '/../layout/header.php';
         isMetaDescAuto = (this.value.trim() === '');
     });
 
-    // Cerrar modal al hacer clic fuera del contenido del modal
-    document.getElementById('edit-page-modal').addEventListener('click', function(e) {
-        if (e.target === this) {
+    // Cerrar modal al hacer clic fuera del contenido del modal (protegiendo la selección de texto)
+    let isMouseDownOnBackdrop = false;
+    const pageModal = document.getElementById('edit-page-modal');
+    pageModal.addEventListener('mousedown', function(e) {
+        isMouseDownOnBackdrop = (e.target === this);
+    });
+    pageModal.addEventListener('mouseup', function(e) {
+        if (e.target === this && isMouseDownOnBackdrop) {
             closeEditModal();
         }
+        isMouseDownOnBackdrop = false;
     });
 </script>
 

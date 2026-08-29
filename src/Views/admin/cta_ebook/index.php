@@ -320,11 +320,16 @@ require dirname(__DIR__) . '/layout/header.php';
         modal.classList.add('hidden');
     }
 
-    // Cerrar haciendo clic fuera del modal
-    modal.addEventListener('click', function(e) {
-        if (e.target === this) {
+    // Cerrar haciendo clic fuera del modal (protegiendo la selección de texto)
+    let isMouseDownOnBackdrop = false;
+    modal.addEventListener('mousedown', function(e) {
+        isMouseDownOnBackdrop = (e.target === this);
+    });
+    modal.addEventListener('mouseup', function(e) {
+        if (e.target === this && isMouseDownOnBackdrop) {
             closeCtaModal();
         }
+        isMouseDownOnBackdrop = false;
     });
 </script>
 

@@ -197,11 +197,17 @@ require __DIR__ . '/../layout/header.php';
         document.getElementById('view-message-modal').classList.add('hidden');
     }
 
-    // Cerrar modal haciendo clic fuera de él
-    document.getElementById('view-message-modal').addEventListener('click', function(e) {
-        if (e.target === this) {
+    // Cerrar modal haciendo clic fuera de él (protegiendo la selección de texto)
+    let isMouseDownOnBackdrop = false;
+    const messageModal = document.getElementById('view-message-modal');
+    messageModal.addEventListener('mousedown', function(e) {
+        isMouseDownOnBackdrop = (e.target === this);
+    });
+    messageModal.addEventListener('mouseup', function(e) {
+        if (e.target === this && isMouseDownOnBackdrop) {
             closeViewModal();
         }
+        isMouseDownOnBackdrop = false;
     });
 </script>
 

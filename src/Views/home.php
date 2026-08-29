@@ -10,7 +10,7 @@ require __DIR__ . '/layout/header.php';
             <!-- Imagen de Fondo -->
             <div class="aspect-video md:aspect-[21/9] w-full bg-slate-200 dark:bg-slate-900 overflow-hidden relative">
                 <?php if ($featuredPost->featured_image): ?>
-                    <img src="<?php echo Helpers::asset('uploads/' . $featuredPost->featured_image); ?>" alt="<?php echo htmlspecialchars($featuredPost->title); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[600ms]">
+                    <img src="<?php echo Helpers::asset('uploads/' . $featuredPost->featured_image); ?>" alt="<?php echo htmlspecialchars(!empty($featuredPost->image_alt) ? $featuredPost->image_alt : $featuredPost->title); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[600ms]" fetchpriority="high" loading="eager">
                 <?php endif; ?>
                 <!-- Gradiente de Oscurecimiento -->
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
@@ -72,7 +72,7 @@ require __DIR__ . '/layout/header.php';
                         <!-- Miniatura -->
                         <a href="/?route=post&slug=<?php echo $post->slug; ?>" class="block aspect-video bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
                             <?php if ($post->featured_image): ?>
-                                <img src="<?php echo Helpers::asset('uploads/' . $post->featured_image); ?>" alt="<?php echo htmlspecialchars($post->title); ?>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                                <img src="<?php echo Helpers::asset('uploads/' . $post->featured_image); ?>" alt="<?php echo htmlspecialchars(!empty($post->image_alt) ? $post->image_alt : $post->title); ?>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" loading="lazy">
                             <?php endif; ?>
                             
                             <!-- Insignia flotante de la categoría -->

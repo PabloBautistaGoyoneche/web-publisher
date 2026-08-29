@@ -59,7 +59,7 @@ require __DIR__ . '/layout/header.php';
         <!-- Imagen Destacada -->
         <?php if ($post->featured_image): ?>
             <div class="rounded-3xl overflow-hidden shadow-lg aspect-video w-full bg-slate-100 dark:bg-slate-900 border border-slate-200/20">
-                <img src="<?php echo Helpers::asset('uploads/' . $post->featured_image); ?>" alt="<?php echo htmlspecialchars($post->title); ?>" class="w-full h-full object-cover">
+                <img src="<?php echo Helpers::asset('uploads/' . $post->featured_image); ?>" alt="<?php echo htmlspecialchars(!empty($post->image_alt) ? $post->image_alt : $post->title); ?>" class="w-full h-full object-cover" fetchpriority="high" loading="eager">
             </div>
         <?php endif; ?>
 
@@ -148,9 +148,7 @@ require __DIR__ . '/layout/header.php';
                             <article class="carousel-card glass-card rounded-3xl overflow-hidden card-hover border border-slate-100 dark:border-slate-900/60 flex flex-col justify-between h-auto snap-start">
                                 <!-- Miniatura -->
                                 <a href="/?route=post&slug=<?php echo $rPost->slug; ?>" class="block aspect-video bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
-                                    <?php if ($rPost->featured_image): ?>
-                                        <img src="<?php echo Helpers::asset('uploads/' . $rPost->featured_image); ?>" alt="<?php echo htmlspecialchars($rPost->title); ?>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
-                                    <?php endif; ?>
+                                        <img src="<?php echo Helpers::asset('uploads/' . $rPost->featured_image); ?>" alt="<?php echo htmlspecialchars(!empty($rPost->image_alt) ? $rPost->image_alt : $rPost->title); ?>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" loading="lazy">
                                     
                                     <!-- Insignia de categoría -->
                                     <span class="absolute top-4 left-4 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white bg-slate-900/80 backdrop-blur-md">

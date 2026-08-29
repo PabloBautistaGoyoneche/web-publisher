@@ -252,28 +252,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <p class="text-xs text-slate-400 leading-relaxed">ModernBlog utiliza MySQL para almacenar contenidos. Rellena los datos de tu servidor local o de hosting.</p>
                     </div>
 
+                    <?php
+                    $postedHost = $_POST['db_host'] ?? 'localhost';
+                    $postedName = $_POST['db_name'] ?? '';
+                    $postedUser = $_POST['db_user'] ?? '';
+                    ?>
                     <div class="space-y-4">
                         <div class="space-y-2">
                             <label for="db_host" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Servidor de Base de Datos (Host)</label>
-                            <input type="text" id="db_host" name="db_host" required value="localhost" 
+                            <input type="text" id="db_host" name="db_host" required value="<?php echo htmlspecialchars($postedHost); ?>" 
                                    class="w-full px-4 py-3 bg-slate-900/60 border border-slate-800 focus:border-violet-500 rounded-2xl focus:outline-none transition-all text-sm text-white">
                         </div>
 
                         <div class="space-y-2">
                             <label for="db_name" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Nombre de la Base de Datos</label>
-                            <input type="text" id="db_name" name="db_name" required value="modern_blog" 
+                            <input type="text" id="db_name" name="db_name" required value="<?php echo htmlspecialchars($postedName); ?>" placeholder="Ej. tutarjetaideal_blog"
                                    class="w-full px-4 py-3 bg-slate-900/60 border border-slate-800 focus:border-violet-500 rounded-2xl focus:outline-none transition-all text-sm text-white">
                         </div>
 
                         <div class="space-y-2">
                             <label for="db_user" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Usuario</label>
-                            <input type="text" id="db_user" name="db_user" required value="root" 
+                            <input type="text" id="db_user" name="db_user" required value="<?php echo htmlspecialchars($postedUser); ?>" placeholder="Ej. tutarjetaideal_user"
                                    class="w-full px-4 py-3 bg-slate-900/60 border border-slate-800 focus:border-violet-500 rounded-2xl focus:outline-none transition-all text-sm text-white">
                         </div>
 
                         <div class="space-y-2">
                             <label for="db_pass" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Contraseña</label>
-                            <input type="password" id="db_pass" name="db_pass" placeholder="Dejar en blanco si no tiene"
+                            <input type="password" id="db_pass" name="db_pass" placeholder="Ingresa la contraseña del usuario de base de datos"
                                    class="w-full px-4 py-3 bg-slate-900/60 border border-slate-800 focus:border-violet-500 rounded-2xl focus:outline-none transition-all text-sm text-white">
                         </div>
                     </div>

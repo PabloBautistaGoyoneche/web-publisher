@@ -161,6 +161,7 @@ class AdminController {
             $seo_title = isset($_POST['seo_title']) ? trim($_POST['seo_title']) : null;
             $seo_description = isset($_POST['seo_description']) ? trim($_POST['seo_description']) : null;
             $seo_keywords = isset($_POST['seo_keywords']) ? trim($_POST['seo_keywords']) : null;
+            $image_alt = isset($_POST['image_alt']) ? trim($_POST['image_alt']) : null;
 
             if (empty($slug)) {
                 $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
@@ -177,9 +178,9 @@ class AdminController {
                     $allowed = ['jpg', 'jpeg', 'png', 'webp'];
                     
                     if (in_array($ext, $allowed)) {
-                        $imageName = uniqid('post_') . '.' . $ext;
+                        $imageName = uniqid('post_') . '.webp';
                         $destPath = dirname(dirname(__DIR__)) . '/public/uploads/' . $imageName;
-                        move_uploaded_file($tmpName, $destPath);
+                        Helpers::optimizeAndResizeImage($tmpName, $destPath);
                     } else {
                         $error = 'Tipo de imagen no permitido. Solo se permiten JPG, PNG y WEBP.';
                     }
@@ -197,7 +198,8 @@ class AdminController {
                         $status,
                         $seo_title,
                         $seo_description,
-                        $seo_keywords
+                        $seo_keywords,
+                        $image_alt
                     );
 
                     if ($success) {
@@ -225,6 +227,7 @@ class AdminController {
                 $seo_title = isset($_POST['seo_title']) ? trim($_POST['seo_title']) : null;
                 $seo_description = isset($_POST['seo_description']) ? trim($_POST['seo_description']) : null;
                 $seo_keywords = isset($_POST['seo_keywords']) ? trim($_POST['seo_keywords']) : null;
+                $image_alt = isset($_POST['image_alt']) ? trim($_POST['image_alt']) : null;
 
                 if (empty($slug)) {
                     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
@@ -242,9 +245,9 @@ class AdminController {
                         $allowed = ['jpg', 'jpeg', 'png', 'webp'];
                         
                         if (in_array($ext, $allowed)) {
-                            $imageName = uniqid('post_') . '.' . $ext;
+                            $imageName = uniqid('post_') . '.webp';
                             $destPath = dirname(dirname(__DIR__)) . '/public/uploads/' . $imageName;
-                            move_uploaded_file($tmpName, $destPath);
+                            Helpers::optimizeAndResizeImage($tmpName, $destPath);
                             
                             if ($post->featured_image && file_exists(dirname(dirname(__DIR__)) . '/public/uploads/' . $post->featured_image)) {
                                 @unlink(dirname(dirname(__DIR__)) . '/public/uploads/' . $post->featured_image);
@@ -266,7 +269,8 @@ class AdminController {
                             $status,
                             $seo_title,
                             $seo_description,
-                            $seo_keywords
+                            $seo_keywords,
+                            $image_alt
                         );
 
                         if ($success) {
@@ -311,7 +315,8 @@ class AdminController {
                     'status' => $post->status,
                     'seo_title' => $post->seo_title,
                     'seo_description' => $post->seo_description,
-                    'seo_keywords' => $post->seo_keywords
+                    'seo_keywords' => $post->seo_keywords,
+                    'image_alt' => $post->image_alt
                 ]
             ]);
         } else {
@@ -1221,7 +1226,7 @@ class AdminController {
         unset($_SESSION['github_update_available']);
         unset($_SESSION['github_latest_commit']);
         unset($_SESSION['github_last_checked']);
-        header("Location: /?route=admin/dashboard");
+        header("Location: /?route=admin/update");
         exit;
     }
 

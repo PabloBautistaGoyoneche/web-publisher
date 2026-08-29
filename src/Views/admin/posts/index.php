@@ -50,7 +50,7 @@ require __DIR__ . '/../layout/header.php';
                             <td class="px-6 py-4">
                                 <div class="w-14 h-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
                                     <?php if ($post->featured_image): ?>
-                                        <img src="<?php echo Helpers::asset('uploads/' . $post->featured_image); ?>" alt="" class="w-full h-full object-cover">
+                                        <img src="<?php echo Helpers::asset('uploads/' . $post->featured_image); ?>" alt="<?php echo htmlspecialchars(!empty($post->image_alt) ? $post->image_alt : $post->title); ?>" class="w-full h-full object-cover">
                                     <?php else: ?>
                                         <div class="w-full h-full flex items-center justify-center text-xs text-slate-400 font-bold uppercase">S/I</div>
                                     <?php endif; ?>
@@ -245,9 +245,15 @@ require __DIR__ . '/../layout/header.php';
                         <!-- Columna 2: Imagen Destacada -->
                         <div class="space-y-3">
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Imagen Destacada</label>
-                            <p class="text-[10px] text-slate-400 font-medium">Formatos permitidos: JPG, PNG, WEBP.</p>
-                            <input type="file" id="modal-post-image-input" name="featured_image" accept="image/*" class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer w-full">
+                            <p class="text-[10px] text-slate-400 font-medium">Formatos permitidos: JPG, PNG, WEBP (se convertirán a WEBP).</p>
+                            <input type="file" id="modal-post-image-input" name="featured_image" accept="image/jpeg, image/png, image/webp" class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer w-full">
                             
+                            <!-- Alt de la Imagen -->
+                            <div class="space-y-1">
+                                <label for="modal-post-image-alt" class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Texto Alt de la Imagen (Sugerencia SEO)</label>
+                                <input type="text" id="modal-post-image-alt" name="image_alt" placeholder="Alt para accesibilidad y buscadores..." class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-lg focus:outline-none transition-colors text-slate-800 dark:text-slate-100">
+                            </div>
+
                             <!-- Contenedor Vista Previa -->
                             <div id="modal-post-image-preview-container" class="hidden aspect-video w-full rounded-2xl bg-slate-100 dark:bg-slate-900 overflow-hidden border border-slate-200/50 dark:border-slate-800/80 relative">
                                 <img id="modal-post-image-preview" src="#" alt="Vista previa" class="w-full h-full object-cover">
@@ -320,6 +326,7 @@ require __DIR__ . '/../layout/header.php';
     let userManuallyEditedSlug = false;
     let userManuallyEditedSeoTitle = false;
     let userManuallyEditedSeoDesc = false;
+    let userManuallyEditedImageAlt = false;
     let postQuill = null;
 
     function generateSlug(text) {
@@ -416,6 +423,10 @@ require __DIR__ . '/../layout/header.php';
         modalPostSeoTitle.value = "";
         modalPostSeoDescription.value = "";
         modalPostSeoKeywords.value = "";
+        if (window.modalPostImageAlt) {
+            modalPostImageAlt.value = "";
+        }
+        userManuallyEditedImageAlt = false;
         
         openPostModal();
     }
@@ -464,10 +475,14 @@ require __DIR__ . '/../layout/header.php';
                     modalPostSeoTitle.value = post.seo_title ? post.seo_title : "";
                     modalPostSeoDescription.value = post.seo_description ? post.seo_description : "";
                     modalPostSeoKeywords.value = post.seo_keywords ? post.seo_keywords : "";
+                    if (window.modalPostImageAlt) {
+                        modalPostImageAlt.value = post.image_alt ? post.image_alt : "";
+                    }
 
                     // Determinar si ya fueron editados manualmente antes de abrir
                     userManuallyEditedSeoTitle = (post.seo_title && post.seo_title !== post.title);
                     userManuallyEditedSeoDesc = (post.seo_description && post.seo_description !== generateSeoDescription(post.content));
+                    userManuallyEditedImageAlt = (post.image_alt && post.image_alt !== post.title);
                 } else {
                     alert("Error al cargar la entrada.");
                     closePostModal();
@@ -525,6 +540,9 @@ require __DIR__ . '/../layout/header.php';
                 if (!userManuallyEditedSeoTitle && modalPostSeoTitle) {
                     modalPostSeoTitle.value = modalPostTitle.value;
                 }
+                if (!userManuallyEditedImageAlt && window.modalPostImageAlt) {
+                    modalPostImageAlt.value = modalPostTitle.value;
+                }
             });
 
             modalPostSlug.addEventListener('input', () => {
@@ -555,6 +573,17 @@ require __DIR__ . '/../layout/header.php';
                     modalPostSeoDescription.value = generateSeoDescription(postQuill.root.innerHTML);
                 } else {
                     userManuallyEditedSeoDesc = true;
+                }
+            });
+        }
+
+        if (window.modalPostImageAlt) {
+            modalPostImageAlt.addEventListener('input', () => {
+                if (modalPostImageAlt.value.trim() === '') {
+                    userManuallyEditedImageAlt = false;
+                    modalPostImageAlt.value = modalPostTitle.value;
+                } else {
+                    userManuallyEditedImageAlt = true;
                 }
             });
         }

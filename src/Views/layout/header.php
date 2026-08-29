@@ -384,11 +384,32 @@ use App\Helpers;
     </script>
     <?php endif; ?>
     
+    <!-- Preconnect & Optimize Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    </noscript>
+
     <!-- Tailwind Styles (Compilado) -->
     <link rel="stylesheet" href="<?php echo Helpers::asset('css/styles.css'); ?>">
     
     <!-- Prevent favicon requests & clear cached/default favicons -->
     <link rel="icon" href="data:,">
+
+    <!-- Preload Largest Contentful Paint (LCP) Image -->
+    <?php
+    $preloadImage = null;
+    if (isset($featuredPost) && $featuredPost && $featuredPost->featured_image) {
+        $preloadImage = '/uploads/' . $featuredPost->featured_image;
+    } elseif (isset($post) && $post instanceof \App\Models\Post && $post->featured_image) {
+        $preloadImage = '/uploads/' . $post->featured_image;
+    }
+    if ($preloadImage):
+    ?>
+    <link rel="preload" fetchpriority="high" as="image" href="<?php echo htmlspecialchars($preloadImage); ?>">
+    <?php endif; ?>
 
     <!-- Estilos de Identidad del Sitio Dinámicos -->
     <style>
