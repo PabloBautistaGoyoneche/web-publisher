@@ -184,33 +184,15 @@ require __DIR__ . '/layout/header.php';
 
             <!-- SECCIÓN 5: CONFIGURACIÓN DEL CALL TO ACTION (CTA EBOOK) -->
             <div class="space-y-4 pt-2">
-                <h3 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider border-b border-slate-200/50 dark:border-slate-800/50 pb-2">Configuración del Call to Action (Descarga de eBook)</h3>
-                
-                <div class="space-y-3">
-                    <label for="cta_ebook_title" class="block text-xs font-semibold text-slate-400">Título del CTA</label>
-                    <input type="text" id="cta_ebook_title" name="cta_ebook_title" required 
-                           value="<?php echo htmlspecialchars($ctaEbookTitle); ?>" 
-                           class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-semibold text-slate-800 dark:text-slate-200">
-                </div>
-
-                <div class="space-y-3">
-                    <label for="cta_ebook_desc" class="block text-xs font-semibold text-slate-400">Descripción del CTA</label>
-                    <textarea id="cta_ebook_desc" name="cta_ebook_desc" rows="3" required 
-                              class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-medium text-slate-800 dark:text-slate-200"><?php echo htmlspecialchars($ctaEbookDesc); ?></textarea>
-                </div>
-
-                <div class="space-y-3">
-                    <label for="cta_ebook_button" class="block text-xs font-semibold text-slate-400">Texto del Botón de Descarga</label>
-                    <input type="text" id="cta_ebook_button" name="cta_ebook_button" required 
-                           value="<?php echo htmlspecialchars($ctaEbookButton); ?>" 
-                           class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-semibold text-slate-800 dark:text-slate-200">
-                </div>
-
-                <div class="space-y-3">
-                    <label for="cta_ebook_link" class="block text-xs font-semibold text-slate-400">Enlace de Descarga del eBook (URL)</label>
-                    <input type="text" id="cta_ebook_link" name="cta_ebook_link" required 
-                           value="<?php echo htmlspecialchars($ctaEbookLink); ?>" 
-                           class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-mono font-bold text-slate-800 dark:text-slate-200">
+                <h3 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider border-b border-slate-200/50 dark:border-slate-800/50 pb-2">Configuración del Call to Action (CTA)</h3>
+                <div class="p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200">Administrador de Múltiples CTAs</h4>
+                        <p class="text-[11px] text-slate-500">Ahora puedes crear, editar y activar múltiples CTAs con carga de archivos y delays de pop-up personalizados.</p>
+                    </div>
+                    <a href="/?route=admin/cta-ebook" class="btn-primary text-[11px] font-bold py-2.5 px-4 rounded-xl flex-shrink-0">
+                        Ir al Módulo CTA
+                    </a>
                 </div>
             </div>
 
@@ -270,7 +252,49 @@ require __DIR__ . '/layout/header.php';
                 </div>
             </div>
 
-            <!-- SECCIÓN 7: VERSIÓN DEL SISTEMA -->
+            <!-- SECCIÓN 7: POSICIONAMIENTO GEOGRÁFICO (SEO LOCAL / GEO) -->
+            <div class="space-y-4 pt-2">
+                <h3 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider border-b border-slate-200/50 dark:border-slate-800/50 pb-2">Posicionamiento Geográfico (SEO Local / GEO)</h3>
+                <p class="text-xs text-slate-400">Configura la ubicación geográfica de tu sitio web para optimizar los resultados de búsqueda locales.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- País -->
+                    <div class="space-y-3">
+                        <label for="geo_country" class="block text-xs font-semibold text-slate-400">Código de País (2 letras)</label>
+                        <input type="text" id="geo_country" name="geo_country" placeholder="Ej. PE, CL, ES, MX" maxlength="2"
+                               value="<?php echo htmlspecialchars($geoCountry ?? ''); ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-mono font-bold uppercase text-slate-800 dark:text-slate-200">
+                    </div>
+
+                    <!-- Región / Provincia -->
+                    <div class="space-y-3">
+                        <label for="geo_region" class="block text-xs font-semibold text-slate-400">Código de Región / Estado (ISO-3166-2)</label>
+                        <input type="text" id="geo_region" name="geo_region" placeholder="Ej. PE-LIM, CL-RM, ES-MD"
+                               value="<?php echo htmlspecialchars($geoRegion ?? ''); ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-mono font-bold uppercase text-slate-800 dark:text-slate-200">
+                        <p class="text-[10px] text-slate-400">Ejemplos: PE-LIM (Lima), CL-RM (Región Metropolitana), ES-M (Madrid).</p>
+                    </div>
+
+                    <!-- Ciudad / Localidad -->
+                    <div class="space-y-3">
+                        <label for="geo_placename" class="block text-xs font-semibold text-slate-400">Nombre de la Ciudad / Localidad</label>
+                        <input type="text" id="geo_placename" name="geo_placename" placeholder="Ej. Lima, Santiago, Madrid"
+                               value="<?php echo htmlspecialchars($geoPlacename ?? ''); ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-semibold text-slate-800 dark:text-slate-200">
+                    </div>
+
+                    <!-- Coordenadas Geográficas -->
+                    <div class="space-y-3">
+                        <label for="geo_position" class="block text-xs font-semibold text-slate-400">Coordenadas Geográficas (Latitud;Longitud)</label>
+                        <input type="text" id="geo_position" name="geo_position" placeholder="Ej. -12.0463;-77.0427"
+                               value="<?php echo htmlspecialchars($geoPosition ?? ''); ?>" 
+                               class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:border-brand-500 rounded-2xl focus:outline-none transition-all font-mono font-bold text-slate-800 dark:text-slate-200">
+                        <p class="text-[10px] text-slate-400">Separadas por punto y coma (ej. -12.0463;-77.0427).</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 8: VERSIÓN DEL SISTEMA -->
             <div class="space-y-4 pt-2">
                 <h3 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider border-b border-slate-200/50 dark:border-slate-800/50 pb-2">Información del Sistema</h3>
                 <div class="p-4 bg-slate-100 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400 space-y-2">

@@ -116,6 +116,9 @@ if (isset($_GET['route']) && !isset($_GET['api']) && !isset($_GET['ajax']) && st
 
 // Enrutador sencillo con soporte de URLs amigables
 $route = $_GET['route'] ?? '';
+if ($route === 'agradecimiento' || $route === 'thank-you') {
+    $route = 'thank-you';
+}
 
 if (empty($route)) {
     // Si estamos en el servidor de desarrollo de PHP, servir archivos estáticos directamente
@@ -199,12 +202,20 @@ if (empty($route)) {
         $route = 'search';
     } elseif (count($segments) === 1) {
         $slug = $segments[0];
-        $adminRoutes = [
+        if ($slug === 'thank-you' || $slug === 'agradecimiento') {
+            $route = 'thank-you';
+        } else {
+            $adminRoutes = [
             'admin/login',
             'admin/logout',
             'admin/dashboard',
             'admin/settings',
             'admin/cta-ebook',
+            'admin/cta-ebook/get',
+            'admin/cta-ebook/create',
+            'admin/cta-ebook/edit',
+            'admin/cta-ebook/delete',
+            'admin/cta-ebook/toggle',
             'admin/posts',
             'admin/posts/create',
             'admin/posts/edit',
@@ -221,9 +232,11 @@ if (empty($route)) {
             'admin/pages',
             'admin/pages/create',
             'admin/pages/edit',
+            'admin/pages/get',
             'admin/pages/delete',
             'admin/messages',
-            'admin/messages/delete'
+            'admin/messages/delete',
+            'admin/messages/export'
         ];
         if (in_array($slug, $adminRoutes)) {
             $route = $slug;
@@ -242,13 +255,19 @@ if (empty($route)) {
                 $route = 'home';
             }
         }
-    } else {
+    }
+} else {
         $adminRoutes = [
             'admin/login',
             'admin/logout',
             'admin/dashboard',
             'admin/settings',
             'admin/cta-ebook',
+            'admin/cta-ebook/get',
+            'admin/cta-ebook/create',
+            'admin/cta-ebook/edit',
+            'admin/cta-ebook/delete',
+            'admin/cta-ebook/toggle',
             'admin/posts',
             'admin/posts/create',
             'admin/posts/edit',
@@ -265,9 +284,11 @@ if (empty($route)) {
             'admin/pages',
             'admin/pages/create',
             'admin/pages/edit',
+            'admin/pages/get',
             'admin/pages/delete',
             'admin/messages',
             'admin/messages/delete',
+            'admin/messages/export',
             'admin/update',
             'admin/update/check',
             'admin/update/api',
@@ -320,6 +341,10 @@ try {
                 $blog->page($slug);
             }
             break;
+
+        case 'thank-you':
+            $blog->thankYou();
+            break;
             
         // Rutas Administrativas (Panel)
         case 'admin/login':
@@ -360,6 +385,26 @@ try {
             
         case 'admin/cta-ebook':
             $admin->ctaEbook();
+            break;
+
+        case 'admin/cta-ebook/get':
+            $admin->getCtaJson();
+            break;
+
+        case 'admin/cta-ebook/create':
+            $admin->createCta();
+            break;
+
+        case 'admin/cta-ebook/edit':
+            $admin->editCta();
+            break;
+
+        case 'admin/cta-ebook/delete':
+            $admin->deleteCta();
+            break;
+
+        case 'admin/cta-ebook/toggle':
+            $admin->toggleCta();
             break;
             
         case 'admin/posts':
@@ -427,6 +472,10 @@ try {
             $admin->editPage();
             break;
             
+        case 'admin/pages/get':
+            $admin->getPageJson();
+            break;
+            
         case 'admin/pages/delete':
             $admin->deletePage();
             break;
@@ -437,6 +486,10 @@ try {
             
         case 'admin/messages/delete':
             $admin->deleteMessage();
+            break;
+
+        case 'admin/messages/export':
+            $admin->exportMessages();
             break;
             
         case 'home':

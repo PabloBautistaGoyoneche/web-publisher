@@ -72,9 +72,9 @@ require __DIR__ . '/layout/header.php';
         <!-- Sección de Posts Relacionados -->
         <?php if (!empty($relatedPosts)): ?>
             <div class="space-y-6 pt-10 border-t border-slate-100 dark:border-slate-800/80">
-                <h3 class="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
+                <h2 class="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
                     Te puede interesar
-                </h3>
+                </h2>
                 
                 <style>
                     .related-carousel::-webkit-scrollbar {
@@ -162,11 +162,11 @@ require __DIR__ . '/layout/header.php';
                                 <div class="p-6 flex flex-col flex-grow justify-between">
                                     <div class="space-y-3">
                                         <!-- Título -->
-                                        <h4 class="text-base font-bold text-slate-800 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 transition-colors leading-snug">
+                                        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 transition-colors leading-snug">
                                             <a href="/?route=post&slug=<?php echo $rPost->slug; ?>">
                                                 <?php echo htmlspecialchars($rPost->title); ?>
                                             </a>
-                                        </h4>
+                                        </h3>
                                         
                                         <!-- Fecha -->
                                         <span class="text-xs text-slate-400 dark:text-slate-500 font-medium block">

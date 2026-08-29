@@ -10,6 +10,9 @@ class Page {
     public string $title;
     public string $slug;
     public string $content;
+    public ?string $seo_title = null;
+    public ?string $seo_description = null;
+    public ?string $seo_keywords = null;
     public string $created_at;
     public string $updated_at;
 
@@ -56,27 +59,33 @@ class Page {
     /**
      * Crea una nueva página estática.
      */
-    public static function create(string $title, string $slug, string $content): bool {
+    public static function create(string $title, string $slug, string $content, ?string $seo_title = null, ?string $seo_description = null, ?string $seo_keywords = null): bool {
         $db = Database::getConnection();
-        $stmt = $db->prepare("INSERT INTO pages (title, slug, content) VALUES (:title, :slug, :content)");
+        $stmt = $db->prepare("INSERT INTO pages (title, slug, content, seo_title, seo_description, seo_keywords) VALUES (:title, :slug, :content, :seo_title, :seo_description, :seo_keywords)");
         return $stmt->execute([
             'title' => $title,
             'slug' => $slug,
-            'content' => $content
+            'content' => $content,
+            'seo_title' => $seo_title,
+            'seo_description' => $seo_description,
+            'seo_keywords' => $seo_keywords
         ]);
     }
 
     /**
      * Actualiza una página estática existente.
      */
-    public static function update(int $id, string $title, string $slug, string $content): bool {
+    public static function update(int $id, string $title, string $slug, string $content, ?string $seo_title = null, ?string $seo_description = null, ?string $seo_keywords = null): bool {
         $db = Database::getConnection();
-        $stmt = $db->prepare("UPDATE pages SET title = :title, slug = :slug, content = :content WHERE id = :id");
+        $stmt = $db->prepare("UPDATE pages SET title = :title, slug = :slug, content = :content, seo_title = :seo_title, seo_description = :seo_description, seo_keywords = :seo_keywords WHERE id = :id");
         return $stmt->execute([
             'id' => $id,
             'title' => $title,
             'slug' => $slug,
-            'content' => $content
+            'content' => $content,
+            'seo_title' => $seo_title,
+            'seo_description' => $seo_description,
+            'seo_keywords' => $seo_keywords
         ]);
     }
 
@@ -106,6 +115,9 @@ class Page {
         $page->title = $row['title'];
         $page->slug = $row['slug'];
         $page->content = $row['content'];
+        $page->seo_title = $row['seo_title'] ?? null;
+        $page->seo_description = $row['seo_description'] ?? null;
+        $page->seo_keywords = $row['seo_keywords'] ?? null;
         $page->created_at = $row['created_at'];
         $page->updated_at = $row['updated_at'];
         return $page;

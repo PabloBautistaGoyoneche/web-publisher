@@ -5,10 +5,18 @@ use App\Helpers;
 
     <!-- Sección Call to Action (Descarga de eBook) de Ancho Completo -->
     <?php
-    $ctaTitle = \App\Models\Setting::get('cta_ebook_title', 'Descarga nuestro eBook Gratuito');
-    $ctaText = \App\Models\Setting::get('cta_ebook_desc', 'Aprende los fundamentos del desarrollo web moderno con nuestra guía completa.');
-    $ctaButton = \App\Models\Setting::get('cta_ebook_button', 'Descargar eBook');
-    $ctaLink = \App\Models\Setting::get('cta_ebook_link', '#');
+    $activeCta = \App\Models\Cta::getActive();
+    if ($activeCta) {
+        $ctaTitle = $activeCta->title;
+        $ctaText = $activeCta->description;
+        $ctaButton = $activeCta->button_text;
+        $ctaLink = $activeCta->link;
+    } else {
+        $ctaTitle = \App\Models\Setting::get('cta_ebook_title', 'Descarga nuestro eBook Gratuito');
+        $ctaText = \App\Models\Setting::get('cta_ebook_desc', 'Aprende los fundamentos del desarrollo web moderno con nuestra guía completa.');
+        $ctaButton = \App\Models\Setting::get('cta_ebook_button', 'Descargar eBook');
+        $ctaLink = \App\Models\Setting::get('cta_ebook_link', '#');
+    }
     
     $downloadUrl = $ctaLink;
     if (!empty($ctaLink) && $ctaLink !== '#' && !str_starts_with($ctaLink, 'http://') && !str_starts_with($ctaLink, 'https://') && !str_starts_with($ctaLink, '/')) {
@@ -193,11 +201,19 @@ use App\Helpers;
 
     <!-- Ventana Modal de eBook (Pop-up) -->
     <?php
-    $ctaTitleModal = \App\Models\Setting::get('cta_ebook_title', 'Descarga nuestro eBook Gratuito');
-    $ctaTextModal = \App\Models\Setting::get('cta_ebook_desc', 'Aprende los fundamentos del desarrollo web moderno con nuestra guía completa.');
-    $ctaButtonModal = \App\Models\Setting::get('cta_ebook_button', 'Descargar eBook');
-    $ctaLinkModal = \App\Models\Setting::get('cta_ebook_link', '#');
-    $ctaDelayModal = (int)\App\Models\Setting::get('cta_ebook_delay', '5');
+    if ($activeCta) {
+        $ctaTitleModal = $activeCta->title;
+        $ctaTextModal = $activeCta->description;
+        $ctaButtonModal = $activeCta->button_text;
+        $ctaLinkModal = $activeCta->link;
+        $ctaDelayModal = $activeCta->delay;
+    } else {
+        $ctaTitleModal = \App\Models\Setting::get('cta_ebook_title', 'Descarga nuestro eBook Gratuito');
+        $ctaTextModal = \App\Models\Setting::get('cta_ebook_desc', 'Aprende los fundamentos del desarrollo web moderno con nuestra guía completa.');
+        $ctaButtonModal = \App\Models\Setting::get('cta_ebook_button', 'Descargar eBook');
+        $ctaLinkModal = \App\Models\Setting::get('cta_ebook_link', '#');
+        $ctaDelayModal = (int)\App\Models\Setting::get('cta_ebook_delay', '5');
+    }
 
     $downloadUrlModal = $ctaLinkModal;
     if (!empty($ctaLinkModal) && $ctaLinkModal !== '#' && !str_starts_with($ctaLinkModal, 'http://') && !str_starts_with($ctaLinkModal, 'https://') && !str_starts_with($ctaLinkModal, '/')) {

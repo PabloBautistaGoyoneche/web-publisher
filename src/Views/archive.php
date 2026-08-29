@@ -65,11 +65,11 @@ require __DIR__ . '/layout/header.php';
                         <div class="p-6 flex flex-col flex-grow justify-between">
                             <div class="space-y-3">
                                 <!-- Título -->
-                                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 transition-colors leading-snug">
+                                <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 transition-colors leading-snug">
                                     <a href="/?route=post&slug=<?php echo $post->slug; ?>">
                                         <?php echo htmlspecialchars($post->title); ?>
                                     </a>
-                                </h3>
+                                </h2>
                                 
                                 <!-- Fecha -->
                                 <span class="text-xs text-slate-400 dark:text-slate-500 font-medium block">

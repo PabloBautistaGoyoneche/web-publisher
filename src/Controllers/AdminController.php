@@ -320,6 +320,48 @@ class AdminController {
         exit;
     }
 
+    /**
+     * AJAX: Obtener datos de una página estática en formato JSON
+     */
+    public function getPageJson(): void {
+        $this->checkAuth();
+        $id = (int)($_GET['id'] ?? 0);
+        $page = \App\Models\Page::find($id);
+        header('Content-Type: application/json');
+        if ($page) {
+            $authorName = '';
+            if ($page->slug === 'sobre-el-autor') {
+                $adminId = $_SESSION['admin_id'] ?? null;
+                $author = null;
+                if ($adminId) {
+                    $author = User::find($adminId);
+                }
+                if (!$author && isset($_SESSION['admin_user'])) {
+                    $author = User::findByUsername($_SESSION['admin_user']);
+                }
+                if ($author) {
+                    $authorName = $author->display_name;
+                }
+            }
+            echo json_encode([
+                'success' => true,
+                'page' => [
+                    'id' => $page->id,
+                    'title' => $page->title,
+                    'slug' => $page->slug,
+                    'content' => $page->content,
+                    'seo_title' => $page->seo_title,
+                    'seo_description' => $page->seo_description,
+                    'seo_keywords' => $page->seo_keywords,
+                    'author_name' => $authorName
+                ]
+            ]);
+        } else {
+            echo json_encode(['success' => false]);
+        }
+        exit;
+    }
+
 
 
     /**
@@ -599,7 +641,10 @@ class AdminController {
             if (empty($title) || empty($content)) {
                 $error = 'Por favor, completa todos los campos obligatorios.';
             } else {
-                $success = \App\Models\Page::create($title, $slug, $content);
+                $seo_title = trim($_POST['seo_title'] ?? '') ?: null;
+                $seo_description = trim($_POST['seo_description'] ?? '') ?: null;
+                $seo_keywords = trim($_POST['seo_keywords'] ?? '') ?: null;
+                $success = \App\Models\Page::create($title, $slug, $content, $seo_title, $seo_description, $seo_keywords);
                 if ($success) {
                     header("Location: /?route=admin/pages");
                     exit;
@@ -667,7 +712,10 @@ class AdminController {
                 if (empty($title) || empty($content)) {
                     $error = 'Por favor, completa todos los campos obligatorios.';
                 } else {
-                    $success = \App\Models\Page::update($page->id, $title, $slug, $content);
+                    $seo_title = trim($_POST['seo_title'] ?? '') ?: null;
+                    $seo_description = trim($_POST['seo_description'] ?? '') ?: null;
+                    $seo_keywords = trim($_POST['seo_keywords'] ?? '') ?: null;
+                    $success = \App\Models\Page::update($page->id, $title, $slug, $content, $seo_title, $seo_description, $seo_keywords);
                     if ($success) {
                         header("Location: /?route=admin/pages");
                         exit;
@@ -731,6 +779,39 @@ class AdminController {
     }
 
     /**
+     * Bandeja de Entrada: Exportar Mensajes a Excel (CSV compatible)
+     */
+    public function exportMessages(): void {
+        $this->checkAuth();
+        $messages = \App\Models\Message::all();
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="mensajes_contacto.csv"');
+        
+        // BOM UTF-8 para Excel
+        echo "\xEF\xBB\xBF";
+        
+        $output = fopen('php://output', 'w');
+        
+        // Encabezados
+        fputcsv($output, ['ID', 'Nombre', 'Correo', 'Asunto', 'Mensaje', 'Fecha de Recepción'], ';');
+        
+        foreach ($messages as $msg) {
+            fputcsv($output, [
+                $msg->id,
+                $msg->name,
+                $msg->email,
+                $msg->subject,
+                $msg->message,
+                $msg->created_at
+            ], ';');
+        }
+        
+        fclose($output);
+        exit;
+    }
+
+    /**
      * Muestra y procesa la configuración de la Identidad del Sitio.
      */
     public function settings(): void {
@@ -767,6 +848,11 @@ class AdminController {
             $socialLinkedin = trim($_POST['social_linkedin'] ?? '');
             $socialYoutube = trim($_POST['social_youtube'] ?? '');
             $socialGithub = trim($_POST['social_github'] ?? '');
+
+            $geoCountry = trim($_POST['geo_country'] ?? '');
+            $geoRegion = trim($_POST['geo_region'] ?? '');
+            $geoPlacename = trim($_POST['geo_placename'] ?? '');
+            $geoPosition = trim($_POST['geo_position'] ?? '');
 
             // Validar formato hexadecimal
             $hexPattern = '/^#[0-9a-fA-F]{6}$/';
@@ -806,6 +892,11 @@ class AdminController {
                 \App\Models\Setting::set('social_youtube', $socialYoutube);
                 \App\Models\Setting::set('social_github', $socialGithub);
 
+                \App\Models\Setting::set('geo_country', $geoCountry);
+                \App\Models\Setting::set('geo_region', $geoRegion);
+                \App\Models\Setting::set('geo_placename', $geoPlacename);
+                \App\Models\Setting::set('geo_position', $geoPosition);
+
                 $success = true;
             }
         }
@@ -839,6 +930,11 @@ class AdminController {
         $socialYoutube = \App\Models\Setting::get('social_youtube', '');
         $socialGithub = \App\Models\Setting::get('social_github', '');
 
+        $geoCountry = \App\Models\Setting::get('geo_country', '');
+        $geoRegion = \App\Models\Setting::get('geo_region', '');
+        $geoPlacename = \App\Models\Setting::get('geo_placename', '');
+        $geoPosition = \App\Models\Setting::get('geo_position', '');
+
         $currentCommit = \App\Models\Setting::get('current_commit', 'initial');
 
         $this->render('admin/settings', [
@@ -864,6 +960,10 @@ class AdminController {
             'socialLinkedin' => $socialLinkedin,
             'socialYoutube' => $socialYoutube,
             'socialGithub' => $socialGithub,
+            'geoCountry' => $geoCountry,
+            'geoRegion' => $geoRegion,
+            'geoPlacename' => $geoPlacename,
+            'geoPosition' => $geoPosition,
             'currentCommit' => $currentCommit,
             'error' => $error,
             'success' => $success
@@ -871,96 +971,246 @@ class AdminController {
     }
 
     /**
-     * Muestra y procesa el módulo CTA eBook.
+     * Muestra y administra el listado de CTAs.
      */
     public function ctaEbook(): void {
         $this->checkAuth();
+        
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
 
-        $error = null;
-        $success = false;
+        $error = $_SESSION['cta_error'] ?? null;
+        $success = $_SESSION['cta_success'] ?? null;
+        unset($_SESSION['cta_error'], $_SESSION['cta_success']);
+
+        $ctas = \App\Models\Cta::all();
+
+        $this->render('admin/cta_ebook/index', [
+            'title' => 'Módulo CTA eBook - Admin Panel',
+            'ctas' => $ctas,
+            'error' => $error,
+            'success' => $success
+        ]);
+    }
+
+    /**
+     * Retorna los datos de un CTA específico en JSON para edición.
+     */
+    public function getCtaJson(): void {
+        $this->checkAuth();
+        $id = (int)($_GET['id'] ?? 0);
+        $cta = \App\Models\Cta::find($id);
+        
+        header('Content-Type: application/json');
+        if ($cta) {
+            echo json_encode([
+                'success' => true,
+                'cta' => [
+                    'id' => $cta->id,
+                    'title' => $cta->title,
+                    'description' => $cta->description,
+                    'button_text' => $cta->button_text,
+                    'link' => $cta->link,
+                    'delay' => $cta->delay,
+                    'is_active' => $cta->is_active
+                ]
+            ]);
+        } else {
+            echo json_encode(['success' => false]);
+        }
+        exit;
+    }
+
+    /**
+     * Crea un nuevo CTA.
+     */
+    public function createCta(): void {
+        $this->checkAuth();
+        
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
 
         $uploadDir = dirname(dirname(__DIR__)) . '/public/uploads/';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $action = $_POST['action'] ?? 'save';
+            $title = trim($_POST['title'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $button_text = trim($_POST['button_text'] ?? '');
+            $link = trim($_POST['link'] ?? '#');
+            $delay = (int)($_POST['delay'] ?? 5);
+            $is_active = isset($_POST['is_active']) && $_POST['is_active'] === '1' ? 1 : 0;
 
-            if ($action === 'delete_file') {
-                $currentLink = \App\Models\Setting::get('cta_ebook_link', '#');
-                if (!empty($currentLink) && $currentLink !== '#') {
-                    $filePath = $uploadDir . $currentLink;
-                    if (file_exists($filePath)) {
-                        @unlink($filePath);
-                    }
-                    \App\Models\Setting::set('cta_ebook_link', '#');
-                    $success = 'El archivo del eBook ha sido eliminado con éxito.';
-                }
+            if (empty($title) || empty($description) || empty($button_text) || empty($delay)) {
+                $_SESSION['cta_error'] = 'Por favor, completa todos los campos requeridos.';
             } else {
-                $ctaEbookTitle = trim($_POST['cta_ebook_title'] ?? '');
-                $ctaEbookDesc = trim($_POST['cta_ebook_desc'] ?? '');
-                $ctaEbookButton = trim($_POST['cta_ebook_button'] ?? '');
-                $ctaEbookLink = trim($_POST['cta_ebook_link'] ?? '#');
-                $ctaEbookDelay = trim($_POST['cta_ebook_delay'] ?? '5');
+                // Procesar archivo si existe
+                if (isset($_FILES['cta_file']) && $_FILES['cta_file']['error'] === UPLOAD_ERR_OK) {
+                    $tmpName = $_FILES['cta_file']['tmp_name'];
+                    $origName = basename($_FILES['cta_file']['name']);
+                    $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                    $allowedExts = ['pdf', 'epub', 'zip', 'rar', 'mobi', 'docx'];
 
-                if (empty($ctaEbookTitle) || empty($ctaEbookDesc) || empty($ctaEbookButton) || empty($ctaEbookDelay)) {
-                    $error = 'Por favor, completa los campos requeridos.';
+                    if (!in_array($ext, $allowedExts)) {
+                        $_SESSION['cta_error'] = 'Formato de archivo no permitido. Solo se permiten: PDF, EPUB, MOBI, ZIP, RAR, DOCX.';
+                        header("Location: /?route=admin/cta-ebook");
+                        exit;
+                    }
+
+                    $filename = 'ebook_' . time() . '_' . uniqid() . '.' . $ext;
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+                    if (move_uploaded_file($tmpName, $uploadDir . $filename)) {
+                        $link = $filename;
+                    }
+                }
+
+                $success = \App\Models\Cta::create($title, $description, $button_text, $link, $delay, $is_active);
+                if ($success) {
+                    $_SESSION['cta_success'] = 'El CTA ha sido creado con éxito.';
                 } else {
-                    // Procesar subida de archivo si existe
-                    if (isset($_FILES['cta_ebook_file']) && $_FILES['cta_ebook_file']['error'] === UPLOAD_ERR_OK) {
-                        $tmpName = $_FILES['cta_ebook_file']['tmp_name'];
-                        $origName = basename($_FILES['cta_ebook_file']['name']);
-                        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
-                        
-                        // Validar extensiones de eBook permitidas (pdf, epub, zip, docx, etc.)
-                        $allowedExts = ['pdf', 'epub', 'zip', 'rar', 'mobi', 'docx'];
-                        if (!in_array($ext, $allowedExts)) {
-                            $error = 'Formato de archivo no permitido. Solo se permiten: PDF, EPUB, MOBI, ZIP, RAR, DOCX.';
-                        } else {
-                            // Borrar el archivo viejo si existe
-                            $oldLink = \App\Models\Setting::get('cta_ebook_link', '#');
-                            if (!empty($oldLink) && $oldLink !== '#' && file_exists($uploadDir . $oldLink)) {
-                                @unlink($uploadDir . $oldLink);
-                            }
-
-                            // Subir el nuevo archivo
-                            $filename = 'ebook_' . time() . '_' . uniqid() . '.' . $ext;
-                            if (!is_dir($uploadDir)) {
-                                mkdir($uploadDir, 0755, true);
-                            }
-                            if (move_uploaded_file($tmpName, $uploadDir . $filename)) {
-                                $ctaEbookLink = $filename;
-                            }
-                        }
-                    }
-
-                    if (!$error) {
-                        \App\Models\Setting::set('cta_ebook_title', $ctaEbookTitle);
-                        \App\Models\Setting::set('cta_ebook_desc', $ctaEbookDesc);
-                        \App\Models\Setting::set('cta_ebook_button', $ctaEbookButton);
-                        \App\Models\Setting::set('cta_ebook_link', $ctaEbookLink);
-                        \App\Models\Setting::set('cta_ebook_delay', $ctaEbookDelay);
-                        $success = '¡Módulo CTA eBook guardado con éxito!';
-                    }
+                    $_SESSION['cta_error'] = 'Ocurrió un error al guardar el CTA.';
                 }
             }
         }
+        header("Location: /?route=admin/cta-ebook");
+        exit;
+    }
 
-        // Cargar valores actuales
-        $ctaEbookTitle = \App\Models\Setting::get('cta_ebook_title', 'Descarga nuestro eBook Gratuito');
-        $ctaEbookDesc = \App\Models\Setting::get('cta_ebook_desc', 'Aprende los fundamentos del desarrollo web moderno con nuestra guía completa.');
-        $ctaEbookButton = \App\Models\Setting::get('cta_ebook_button', 'Descargar eBook');
-        $ctaEbookLink = \App\Models\Setting::get('cta_ebook_link', '#');
-        $ctaEbookDelay = \App\Models\Setting::get('cta_ebook_delay', '5');
+    /**
+     * Edita un CTA existente.
+     */
+    public function editCta(): void {
+        $this->checkAuth();
+        
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
 
-        $this->render('admin/cta_ebook/index', [
-            'title' => 'Módulo CTA eBook - Admin Panel',
-            'ctaEbookTitle' => $ctaEbookTitle,
-            'ctaEbookDesc' => $ctaEbookDesc,
-            'ctaEbookButton' => $ctaEbookButton,
-            'ctaEbookLink' => $ctaEbookLink,
-            'ctaEbookDelay' => $ctaEbookDelay,
-            'error' => $error,
-            'success' => $success
-        ]);
+        $id = (int)($_GET['id'] ?? 0);
+        $cta = \App\Models\Cta::find($id);
+
+        if (!$cta) {
+            $_SESSION['cta_error'] = 'El CTA especificado no existe.';
+            header("Location: /?route=admin/cta-ebook");
+            exit;
+        }
+
+        $uploadDir = dirname(dirname(__DIR__)) . '/public/uploads/';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $title = trim($_POST['title'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $button_text = trim($_POST['button_text'] ?? '');
+            $link = trim($_POST['link'] ?? '#');
+            $delay = (int)($_POST['delay'] ?? 5);
+            $is_active = isset($_POST['is_active']) && $_POST['is_active'] === '1' ? 1 : 0;
+            
+            // Si el usuario marcó para eliminar el archivo del ebook actual
+            if (isset($_POST['delete_file']) && $_POST['delete_file'] === '1') {
+                if (!empty($cta->link) && $cta->link !== '#' && file_exists($uploadDir . $cta->link)) {
+                    @unlink($uploadDir . $cta->link);
+                }
+                $link = '#';
+            }
+
+            if (empty($title) || empty($description) || empty($button_text) || empty($delay)) {
+                $_SESSION['cta_error'] = 'Por favor, completa todos los campos requeridos.';
+            } else {
+                // Procesar nuevo archivo si existe
+                if (isset($_FILES['cta_file']) && $_FILES['cta_file']['error'] === UPLOAD_ERR_OK) {
+                    $tmpName = $_FILES['cta_file']['tmp_name'];
+                    $origName = basename($_FILES['cta_file']['name']);
+                    $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                    $allowedExts = ['pdf', 'epub', 'zip', 'rar', 'mobi', 'docx'];
+
+                    if (!in_array($ext, $allowedExts)) {
+                        $_SESSION['cta_error'] = 'Formato de archivo no permitido. Solo se permiten: PDF, EPUB, MOBI, ZIP, RAR, DOCX.';
+                        header("Location: /?route=admin/cta-ebook");
+                        exit;
+                    }
+
+                    // Eliminar archivo anterior si existía
+                    if (!empty($cta->link) && $cta->link !== '#' && file_exists($uploadDir . $cta->link)) {
+                        @unlink($uploadDir . $cta->link);
+                    }
+
+                    $filename = 'ebook_' . time() . '_' . uniqid() . '.' . $ext;
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+                    if (move_uploaded_file($tmpName, $uploadDir . $filename)) {
+                        $link = $filename;
+                    }
+                } else {
+                    // Mantener el enlace anterior si no se subió ni se eliminó
+                    if ($link === '#') {
+                        $link = $cta->link;
+                    }
+                }
+
+                $success = \App\Models\Cta::update($cta->id, $title, $description, $button_text, $link, $delay, $is_active);
+                if ($success) {
+                    $_SESSION['cta_success'] = 'El CTA ha sido actualizado con éxito.';
+                } else {
+                    $_SESSION['cta_error'] = 'Ocurrió un error al actualizar el CTA.';
+                }
+            }
+        }
+        header("Location: /?route=admin/cta-ebook");
+        exit;
+    }
+
+    /**
+     * Elimina un CTA existente.
+     */
+    public function deleteCta(): void {
+        $this->checkAuth();
+        
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $id = (int)($_GET['id'] ?? 0);
+        $cta = \App\Models\Cta::find($id);
+
+        if ($cta) {
+            $uploadDir = dirname(dirname(__DIR__)) . '/public/uploads/';
+            if (!empty($cta->link) && $cta->link !== '#' && file_exists($uploadDir . $cta->link)) {
+                @unlink($uploadDir . $cta->link);
+            }
+            \App\Models\Cta::delete($id);
+            $_SESSION['cta_success'] = 'El CTA ha sido eliminado con éxito.';
+        } else {
+            $_SESSION['cta_error'] = 'El CTA especificado no existe.';
+        }
+        header("Location: /?route=admin/cta-ebook");
+        exit;
+    }
+
+    /**
+     * Cambia el estado de un CTA a activo.
+     */
+    public function toggleCta(): void {
+        $this->checkAuth();
+        
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $id = (int)($_GET['id'] ?? 0);
+        $cta = \App\Models\Cta::find($id);
+
+        if ($cta) {
+            \App\Models\Cta::setActive($id);
+            $_SESSION['cta_success'] = 'El CTA seleccionado ha sido activado y los demás desactivados.';
+        } else {
+            $_SESSION['cta_error'] = 'El CTA especificado no existe.';
+        }
+        header("Location: /?route=admin/cta-ebook");
+        exit;
     }
 
     public function checkUpdate(): void {

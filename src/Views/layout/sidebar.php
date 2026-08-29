@@ -10,9 +10,9 @@ $recentPosts = Post::latest(4);
 
     <!-- Widget: Categorías -->
     <div class="glass-card rounded-3xl p-6 border border-slate-100 dark:border-slate-800/80">
-        <h3 class="text-lg font-bold mb-4 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+        <h2 class="text-lg font-bold mb-4 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
             Categorías
-        </h3>
+        </h2>
         <style>
             .category-submenu {
                 transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out;
@@ -122,9 +122,9 @@ $recentPosts = Post::latest(4);
 
     <!-- Widget: Entradas Recientes -->
     <div class="glass-card rounded-3xl p-6 border border-slate-100 dark:border-slate-800/80">
-        <h3 class="text-lg font-bold mb-4 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+        <h2 class="text-lg font-bold mb-4 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
             Artículos Recientes
-        </h3>
+        </h2>
         <div class="space-y-4">
             <?php foreach($recentPosts as $rPost): ?>
                 <a href="/?route=post&slug=<?php echo $rPost->slug; ?>" class="flex gap-3 group">
@@ -137,9 +137,9 @@ $recentPosts = Post::latest(4);
                         <span class="text-xs text-brand-600 dark:text-brand-400 font-semibold mb-0.5">
                             <?php echo htmlspecialchars($rPost->getCategory()->name); ?>
                         </span>
-                        <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2 leading-tight">
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2 leading-tight">
                             <?php echo htmlspecialchars($rPost->title); ?>
-                        </h4>
+                        </h3>
                     </div>
                 </a>
             <?php endforeach; ?>

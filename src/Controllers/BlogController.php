@@ -158,7 +158,8 @@ class BlogController {
             } else {
                 $success = \App\Models\Message::create($name, $email, $subject, $message);
                 if ($success) {
-                    $contactSuccess = true;
+                    header("Location: /agradecimiento");
+                    exit;
                 } else {
                     $contactError = 'Ocurrió un error al enviar el mensaje. Inténtalo de nuevo.';
                 }
@@ -182,6 +183,17 @@ class BlogController {
         $categories = Category::all();
         $this->render('404', [
             'title' => 'Página No Encontrada - 404',
+            'categories' => $categories
+        ]);
+    }
+
+    /**
+     * Página de agradecimiento tras enviar un mensaje.
+     */
+    public function thankYou(): void {
+        $categories = Category::all();
+        $this->render('thank_you', [
+            'title' => '¡Gracias por escribirnos! - ' . \App\Models\Setting::get('site_name', 'ModernBlog'),
             'categories' => $categories
         ]);
     }

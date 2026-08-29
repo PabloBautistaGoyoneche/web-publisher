@@ -113,6 +113,34 @@ use App\Helpers;
             $keywordsList = array_unique($keywordsList);
             $seoKeywords = implode(', ', array_slice($keywordsList, 0, 15));
         }
+    } elseif (isset($page) && $page instanceof \App\Models\Page) {
+        // Meta Title: Use custom seo_title if set, otherwise page title
+        if (!empty($page->seo_title)) {
+            $pageTitle = $page->seo_title;
+        } else {
+            $pageTitle = $page->title . ' - ' . $siteName;
+        }
+        
+        // Meta Description: Use custom seo_description if set, otherwise autogenerate
+        if (!empty($page->seo_description)) {
+            $seoDescription = $page->seo_description;
+        } else {
+            $cleanContent = strip_tags($page->content);
+            $cleanContent = preg_replace('/\s+/', ' ', $cleanContent);
+            $cleanContent = trim($cleanContent);
+            if (mb_strlen($cleanContent) > 155) {
+                $seoDescription = mb_substr($cleanContent, 0, 152) . '...';
+            } else {
+                $seoDescription = $cleanContent;
+            }
+        }
+        
+        // Meta Keywords: Use custom seo_keywords if set
+        if (!empty($page->seo_keywords)) {
+            $seoKeywords = $page->seo_keywords;
+        } else {
+            $seoKeywords = strtolower(preg_replace('/[^a-záéíóúüñ\s]/u', '', $page->title)) . ', ' . $siteName;
+        }
     }
 
     // Configuración dinámica de OpenGraph, Twitter Cards y JSON-LD
@@ -270,10 +298,54 @@ use App\Helpers;
         "url" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/",
         "logo" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . Helpers::asset('favicon.ico')
     ];
+
+    // Cargar variables GEO para cabecera y JSON-LD
+    $geoCountry = \App\Models\Setting::get('geo_country');
+    $geoRegion = \App\Models\Setting::get('geo_region');
+    $geoPlacename = \App\Models\Setting::get('geo_placename');
+    $geoPosition = \App\Models\Setting::get('geo_position');
+    
+    $localBusinessSchema = null;
+    if ($geoPlacename && $geoPosition) {
+        $coords = explode(';', $geoPosition);
+        $lat = isset($coords[0]) ? trim($coords[0]) : '';
+        $lng = isset($coords[1]) ? trim($coords[1]) : '';
+        
+        $localBusinessSchema = [
+            "@context" => "https://schema.org",
+            "@type" => "LocalBusiness",
+            "name" => $siteName,
+            "image" => $ogImage,
+            "url" => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/",
+            "address" => [
+                "@type" => "PostalAddress",
+                "addressLocality" => $geoPlacename,
+                "addressCountry" => $geoCountry ?: 'PE'
+            ]
+        ];
+        if ($lat !== '' && $lng !== '') {
+            $localBusinessSchema["geo"] = [
+                "@type" => "GeoCoordinates",
+                "latitude" => $lat,
+                "longitude" => $lng
+            ];
+        }
+    }
     ?>
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
     <meta name="description" content="<?php echo htmlspecialchars($seoDescription); ?>">
     <meta name="keywords" content="<?php echo htmlspecialchars($seoKeywords); ?>">
+
+    <?php if (isset($geoRegion) && $geoRegion): ?>
+    <meta name="geo.region" content="<?php echo htmlspecialchars($geoRegion); ?>">
+    <?php endif; ?>
+    <?php if (isset($geoPlacename) && $geoPlacename): ?>
+    <meta name="geo.placename" content="<?php echo htmlspecialchars($geoPlacename); ?>">
+    <?php endif; ?>
+    <?php if (isset($geoPosition) && $geoPosition): ?>
+    <meta name="geo.position" content="<?php echo htmlspecialchars($geoPosition); ?>">
+    <meta name="ICBM" content="<?php echo htmlspecialchars(str_replace(';', ', ', $geoPosition)); ?>">
+    <?php endif; ?>
 
     <!-- Metadatos OpenGraph (Redes Sociales) -->
     <meta property="og:title" content="<?php echo htmlspecialchars($ogTitle); ?>">
@@ -304,6 +376,11 @@ use App\Helpers;
     <?php if ($articleSchema): ?>
     <script type="application/ld+json">
         <?php echo json_encode($articleSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
+    </script>
+    <?php endif; ?>
+    <?php if (isset($localBusinessSchema) && $localBusinessSchema): ?>
+    <script type="application/ld+json">
+        <?php echo json_encode($localBusinessSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
     </script>
     <?php endif; ?>
     
