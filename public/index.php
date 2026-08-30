@@ -236,7 +236,8 @@ if (empty($route)) {
             'admin/pages/delete',
             'admin/messages',
             'admin/messages/delete',
-            'admin/messages/export'
+            'admin/messages/export',
+            'admin/profile'
         ];
         if (in_array($slug, $adminRoutes)) {
             $route = $slug;
@@ -293,7 +294,8 @@ if (empty($route)) {
             'admin/update/check',
             'admin/update/api',
             'admin/logs',
-            'admin/logs/clear'
+            'admin/logs/clear',
+            'admin/profile'
         ];
         if (in_array($uriPath, $adminRoutes)) {
             $route = $uriPath;
@@ -361,6 +363,10 @@ try {
             
         case 'admin/settings':
             $admin->settings();
+            break;
+            
+        case 'admin/profile':
+            $admin->profile();
             break;
             
         case 'admin/update':

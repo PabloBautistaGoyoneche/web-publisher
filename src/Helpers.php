@@ -190,4 +190,21 @@ class Helpers {
 
         return $success;
     }
+
+    /**
+     * Retorna el HTML para el avatar del autor (imagen o inicial).
+     */
+    public static function getAuthorAvatarHtml($author, string $sizeClass = 'w-6 h-6 text-[10px]'): string {
+        $avatar = $author->avatar ?? null;
+        $name = $author->display_name ?? 'Autor';
+        $initial = mb_substr($name, 0, 1);
+        
+        $avatarFile = dirname(__DIR__) . '/public/uploads/' . $avatar;
+        if (!empty($avatar) && file_exists($avatarFile)) {
+            $avatarUrl = '/uploads/' . htmlspecialchars($avatar);
+            return '<img src="' . $avatarUrl . '" class="' . $sizeClass . ' rounded-full object-cover shadow-sm" alt="Avatar">';
+        }
+        
+        return '<span class="' . $sizeClass . ' rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold uppercase">' . htmlspecialchars($initial) . '</span>';
+    }
 }

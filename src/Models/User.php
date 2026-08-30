@@ -69,6 +69,32 @@ class User {
     }
 
     /**
+     * Actualiza el perfil de un usuario.
+     */
+    public static function updateProfile(int $id, string $username, string $email, string $displayName, ?string $bio, ?string $avatar, ?string $newPassword = null): bool {
+        $db = Database::getConnection();
+        
+        $sql = "UPDATE users SET username = :username, email = :email, display_name = :display_name, bio = :bio, avatar = :avatar";
+        $params = [
+            'id' => $id,
+            'username' => $username,
+            'email' => $email,
+            'display_name' => $displayName,
+            'bio' => $bio,
+            'avatar' => $avatar
+        ];
+        
+        if (!empty($newPassword)) {
+            $sql .= ", password = :password";
+            $params['password'] = password_hash($newPassword, PASSWORD_BCRYPT, ['cost' => 12]);
+        }
+        
+        $sql .= " WHERE id = :id";
+        $stmt = $db->prepare($sql);
+        return $stmt->execute($params);
+    }
+
+    /**
      * Mapea un registro de la base de datos a un objeto User.
      */
     private static function map(array $row): self {

@@ -180,9 +180,7 @@ require __DIR__ . '/layout/header.php';
                                     <!-- Meta / Pie de la Tarjeta -->
                                     <div class="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 font-medium mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                                         <div class="flex items-center gap-2">
-                                            <span class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold text-[10px] uppercase">
-                                                <?php echo substr($rPost->getAuthor()->display_name, 0, 1); ?>
-                                            </span>
+                                            <?php echo Helpers::getAuthorAvatarHtml($rPost->getAuthor()); ?>
                                             <span><?php echo htmlspecialchars($rPost->getAuthor()->display_name); ?></span>
                                         </div>
                                         <a href="/?route=post&slug=<?php echo $rPost->slug; ?>" class="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-350 font-bold transition-colors inline-flex items-center gap-1">

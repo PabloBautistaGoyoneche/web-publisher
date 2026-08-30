@@ -38,9 +38,7 @@ require __DIR__ . '/layout/header.php';
                     <!-- Metadatos -->
                     <div class="flex items-center gap-4 text-xs sm:text-sm text-slate-300 font-medium pt-2">
                         <div class="flex items-center gap-2">
-                            <span class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-white uppercase border border-slate-700">
-                                <?php echo substr($featuredPost->getAuthor()->display_name, 0, 1); ?>
-                            </span>
+                            <?php echo Helpers::getAuthorAvatarHtml($featuredPost->getAuthor(), 'w-7 h-7 text-xs border border-slate-700 bg-slate-800'); ?>
                             <span><?php echo htmlspecialchars($featuredPost->getAuthor()->display_name); ?></span>
                         </div>
                         <span>&bull;</span>
@@ -106,9 +104,7 @@ require __DIR__ . '/layout/header.php';
                             <!-- Meta / Pie de la Tarjeta -->
                             <div class="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 font-medium mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                                 <div class="flex items-center gap-2">
-                                    <span class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold text-[10px] uppercase">
-                                        <?php echo substr($post->getAuthor()->display_name, 0, 1); ?>
-                                    </span>
+                                    <?php echo Helpers::getAuthorAvatarHtml($post->getAuthor()); ?>
                                     <span><?php echo htmlspecialchars($post->getAuthor()->display_name); ?></span>
                                 </div>
                                 <a href="/?route=post&slug=<?php echo $post->slug; ?>" class="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-350 font-bold transition-colors inline-flex items-center gap-1">

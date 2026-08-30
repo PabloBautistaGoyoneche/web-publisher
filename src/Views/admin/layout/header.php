@@ -2,8 +2,14 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-$adminName = $_SESSION['admin_name'] ?? 'Administrador';
-$adminUser = $_SESSION['admin_user'] ?? 'admin';
+$adminId = $_SESSION['admin_id'] ?? null;
+$adminUserObj = null;
+if ($adminId) {
+    $adminUserObj = \App\Models\User::find($adminId);
+}
+$adminName = $adminUserObj ? $adminUserObj->display_name : ($_SESSION['admin_name'] ?? 'Administrador');
+$adminUser = $adminUserObj ? $adminUserObj->username : ($_SESSION['admin_user'] ?? 'admin');
+$adminAvatar = $adminUserObj ? $adminUserObj->avatar : null;
 $currentRoute = $_GET['route'] ?? 'admin/dashboard';
 
 // Cargar variables de identidad del sitio
@@ -228,7 +234,7 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#020617');
                     <span>Bitácora de Errores</span>
                 </div>
                 <?php if ($logCountDb > 0): ?>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $currentRoute === 'admin/logs' ? 'bg-white text-brand-650' : 'bg-red-500/20 text-red-500'; ?>">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $currentRoute === 'admin/logs' ? 'bg-white text-brand-700' : 'bg-red-500/20 text-red-500'; ?>">
                         <?php echo $logCountDb; ?>
                     </span>
                 <?php endif; ?>
@@ -241,7 +247,7 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#020617');
                     <span>Actualización del Sistema</span>
                 </div>
                 <?php if ($hasUpdate): ?>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $currentRoute === 'admin/update' ? 'bg-white text-brand-650' : 'bg-amber-500/20 text-amber-500'; ?>">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?php echo $currentRoute === 'admin/update' ? 'bg-white text-brand-700' : 'bg-amber-500/20 text-amber-500'; ?>">
                         NUEVO
                     </span>
                 <?php endif; ?>
@@ -296,13 +302,23 @@ $themeDarkFooter = \App\Models\Setting::get('theme_dark_footer', '#020617');
                         <?php echo $headerActions; ?>
                     </div>
                 <?php endif; ?>
-                <div class="flex flex-col text-right hidden sm:flex">
-                    <span class="text-sm font-bold text-white"><?php echo htmlspecialchars($adminName); ?></span>
-                    <span class="text-xs text-white/65 font-medium">@<?php echo htmlspecialchars($adminUser); ?></span>
-                </div>
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-secondary-600 flex items-center justify-center text-white font-extrabold shadow-md shadow-brand-500/10 uppercase">
-                    <?php echo substr($adminName, 0, 1); ?>
-                </div>
+                
+                <!-- Perfil del Administrador -->
+                <a href="/?route=admin/profile" class="flex items-center gap-3.5 hover:opacity-85 transition-opacity">
+                    <div class="flex flex-col text-right hidden sm:flex">
+                        <span class="text-sm font-bold text-white"><?php echo htmlspecialchars($adminName); ?></span>
+                        <span class="text-xs text-white/65 font-medium">@<?php echo htmlspecialchars($adminUser); ?></span>
+                    </div>
+                    <?php if (!empty($adminAvatar) && file_exists(dirname(dirname(dirname(dirname(__DIR__)))) . '/public/uploads/' . $adminAvatar)): ?>
+                        <img src="/uploads/<?php echo htmlspecialchars($adminAvatar); ?>" class="w-10 h-10 rounded-xl object-cover shadow-md shadow-brand-500/10" alt="Avatar">
+                    <?php else: ?>
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-secondary-600 flex items-center justify-center text-white shadow-md shadow-brand-500/10">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                    <?php endif; ?>
+                </a>
             </div>
         </header>
 

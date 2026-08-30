@@ -141,6 +141,107 @@ class AdminController {
     }
 
     /**
+     * Muestra y procesa la actualización del perfil del administrador.
+     */
+    public function profile(): void {
+        $this->checkAuth();
+        
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        $adminId = $_SESSION['admin_id'];
+        $user = User::find($adminId);
+        if (!$user) {
+            header("Location: /?route=admin/dashboard");
+            exit;
+        }
+
+        $error = null;
+        $successMsg = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $username = trim($_POST['username'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $displayName = trim($_POST['display_name'] ?? '');
+            $bio = trim($_POST['bio'] ?? '') ?: null;
+            $newPassword = $_POST['new_password'] ?? '';
+            $confirmPassword = $_POST['confirm_password'] ?? '';
+
+            if (empty($username) || empty($email) || empty($displayName)) {
+                $error = 'Por favor, completa todos los campos obligatorios (Usuario, Email y Nombre Completo).';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $error = 'Por favor, introduce un correo electrónico válido.';
+            } elseif (!empty($newPassword) && $newPassword !== $confirmPassword) {
+                $error = 'Las contraseñas no coinciden.';
+            } else {
+                $db = \App\Database::getConnection();
+                
+                // Validar que el username no esté en uso por otro usuario
+                $stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE username = :username AND id != :id");
+                $stmt->execute(['username' => $username, 'id' => $adminId]);
+                $usernameExists = (int)$stmt->fetchColumn() > 0;
+
+                // Validar que el email no esté en uso por otro usuario
+                $stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE email = :email AND id != :id");
+                $stmt->execute(['email' => $email, 'id' => $adminId]);
+                $emailExists = (int)$stmt->fetchColumn() > 0;
+
+                if ($usernameExists) {
+                    $error = 'El nombre de usuario ya está en uso por otra cuenta.';
+                } elseif ($emailExists) {
+                    $error = 'El correo electrónico ya está en uso por otra cuenta.';
+                } else {
+                    $avatarName = $user->avatar;
+
+                    // Procesar subida de Avatar
+                    if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+                        $tmpName = $_FILES['avatar']['tmp_name'];
+                        $origName = basename($_FILES['avatar']['name']);
+                        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+                        
+                        if (in_array($ext, $allowed)) {
+                            $avatarName = 'avatar_' . $adminId . '_' . time() . '.webp';
+                            $destPath = dirname(dirname(__DIR__)) . '/public/uploads/' . $avatarName;
+                            
+                            // Redimensionar a un cuadrado de 250x250px y optimizar a WebP
+                            \App\Helpers::optimizeAndResizeImage($tmpName, $destPath, 250, 250);
+                            
+                            // Borrar el avatar anterior si existe
+                            if ($user->avatar && file_exists(dirname(dirname(__DIR__)) . '/public/uploads/' . $user->avatar)) {
+                                @unlink(dirname(dirname(__DIR__)) . '/public/uploads/' . $user->avatar);
+                            }
+                        } else {
+                            $error = 'Tipo de imagen no permitido para el avatar. Solo se permiten JPG, PNG y WEBP.';
+                        }
+                    }
+
+                    if (!$error) {
+                        $updated = User::updateProfile($adminId, $username, $email, $displayName, $bio, $avatarName, $newPassword);
+                        if ($updated) {
+                            $successMsg = 'Tu perfil ha sido actualizado correctamente.';
+                            // Recargar datos
+                            $user = User::find($adminId);
+                            $_SESSION['admin_name'] = $user->display_name;
+                            $_SESSION['admin_user'] = $user->username;
+                        } else {
+                            $error = 'Ocurrió un error al actualizar el perfil en la base de datos.';
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->render('admin/profile', [
+            'title' => 'Editar Perfil - Admin Panel',
+            'user' => $user,
+            'error' => $error,
+            'success' => $successMsg
+        ]);
+    }
+
+    /**
      * CRUD: Listar, Crear y Editar Entradas
      */
     public function posts(): void {
@@ -1355,6 +1456,10 @@ class AdminController {
                             executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                         )");
 
+                        // Resetear para limpiar cualquier residuo del CREATE TABLE
+                        \App\Database::resetConnection();
+                        $db = \App\Database::getConnection();
+
                         $files = glob($migrationsDir . '/*.sql');
                         sort($files);
 
@@ -1362,13 +1467,26 @@ class AdminController {
                             $filename = basename($file);
                             $stmt = $db->prepare("SELECT COUNT(*) FROM migrations WHERE migration = :name");
                             $stmt->execute(['name' => $filename]);
-                            if ($stmt->fetchColumn() == 0) {
+                            $count = (int)$stmt->fetchColumn();
+                            $stmt->closeCursor();
+
+                            if ($count === 0) {
                                 $sql = file_get_contents($file);
                                 if (!empty(trim($sql))) {
                                     $db->exec($sql);
+                                    
+                                    // Resetear conexión tras alterar tablas en la migración
+                                    \App\Database::resetConnection();
+                                    $db = \App\Database::getConnection();
                                 }
-                                $stmt = $db->prepare("INSERT INTO migrations (migration) VALUES (:name)");
-                                $stmt->execute(['name' => $filename]);
+                                $stmtInsert = $db->prepare("INSERT INTO migrations (migration) VALUES (:name)");
+                                $stmtInsert->execute(['name' => $filename]);
+                                $stmtInsert->closeCursor();
+                                
+                                // Resetear conexión tras insertar para mantenerla 100% limpia
+                                \App\Database::resetConnection();
+                                $db = \App\Database::getConnection();
+                                
                                 $migrationsCount++;
                             }
                         }

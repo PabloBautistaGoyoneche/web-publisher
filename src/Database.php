@@ -35,4 +35,11 @@ class Database {
 
         return self::$instance;
     }
+
+    /**
+     * Fuerza el cierre y reinicio de la conexión PDO.
+     */
+    public static function resetConnection(): void {
+        self::$instance = null;
+    }
 }
