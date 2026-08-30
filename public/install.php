@@ -29,11 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dbPass = trim($_POST['db_pass'] ?? '');
 
         try {
-            // Intentar conectar al servidor sin base de datos específica primero (en caso de que deba crearse)
-            $dsn = "mysql:host=$dbHost;charset=utf8mb4";
+            // Conectar directamente a la base de datos especificada (necesario para privilegios restringidos en cPanel)
+            $dsn = "mysql:host=$dbHost;dbname=$dbName;charset=utf8mb4";
             $pdo = new PDO($dsn, $dbUser, $dbPass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_TIMEOUT => 5
+                PDO::ATTR_TIMEOUT => 5,
+                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true
             ]);
             
             // Guardar en sesión temporal
@@ -54,8 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $adminUser = trim($_POST['admin_user'] ?? 'admin');
         $adminEmail = trim($_POST['admin_email'] ?? '');
         $adminPass = trim($_POST['admin_pass'] ?? '');
-        $installDemo = isset($_POST['install_demo']);
-
         // Recuperar datos de conexión
         $dbHost = $_SESSION['install_db_host'] ?? null;
         $dbName = $_SESSION['install_db_name'] ?? null;
@@ -77,7 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $dsn = "mysql:host=$dbHost;dbname=$dbName;charset=utf8mb4";
                     $pdo = new PDO($dsn, $dbUser, $dbPass, [
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_TIMEOUT => 5
+                        PDO::ATTR_TIMEOUT => 5,
+                        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true
                     ]);
                     $dbExists = true;
                 } catch (PDOException $e) {
@@ -88,7 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $dsn = "mysql:host=$dbHost;charset=utf8mb4";
                     $pdo = new PDO($dsn, $dbUser, $dbPass, [
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_TIMEOUT => 5
+                        PDO::ATTR_TIMEOUT => 5,
+                        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true
                     ]);
                     try {
                         $pdo->exec("CREATE DATABASE `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
@@ -106,15 +107,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $sqlContent = file_get_contents($sqlPath);
                 
-                // Dividir por la sección de semillas opcionales si corresponde
-                $parts = explode('-- --- DEMO SEEDS DATA ---', $sqlContent);
+                // Instalación completamente limpia: ejecutar únicamente la estructura de tablas (antes de DEFAULT DATA)
+                $parts = explode('-- --- DEFAULT DATA (Datos por Defecto de Estructura) ---', $sqlContent);
                 $installSql = $parts[0];
-                if ($installDemo) {
-                    $installSql .= "\n" . ($parts[1] ?? '');
+
+                // Ejecutar scripts SQL de estructura de tablas
+                $pdo->exec($installSql);
+
+                // Cerrar y reabrir conexión inmediatamente para limpiar búferes de consultas múltiples de MySQL
+                $pdo = null;
+                $dsn = "mysql:host=$dbHost;dbname=$dbName;charset=utf8mb4";
+                $pdo = new PDO($dsn, $dbUser, $dbPass, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_TIMEOUT => 5,
+                    PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true
+                ]);
+
+                // Ejecutar todas las migraciones SQL adicionales de src/Migrations/ automáticamente
+                $migrationsDir = dirname(__DIR__) . '/src/Migrations';
+                if (is_dir($migrationsDir)) {
+                    $pdo->exec("CREATE TABLE IF NOT EXISTS migrations (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        migration VARCHAR(255) NOT NULL UNIQUE,
+                        executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )");
+
+                    $files = glob($migrationsDir . '/*.sql');
+                    sort($files);
+                    foreach ($files as $file) {
+                        $name = basename($file);
+                        $stmt = $pdo->prepare("SELECT COUNT(*) FROM migrations WHERE migration = :name");
+                        $stmt->execute(['name' => $name]);
+                        $count = (int)$stmt->fetchColumn();
+                        $stmt->closeCursor(); // Liberar cursor para permitir otras consultas en la misma conexión
+                        
+                        if ($count == 0) {
+                            $sql = file_get_contents($file);
+                            if (!empty(trim($sql))) {
+                                $pdo->exec($sql);
+                                
+                                // Reabrir conexión inmediatamente para limpiar cualquier búfer de MySQL tras alterar la tabla
+                                $pdo = null;
+                                $pdo = new PDO($dsn, $dbUser, $dbPass, [
+                                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                                    PDO::ATTR_TIMEOUT => 5,
+                                    PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true
+                                ]);
+                            }
+                            $stmtInsert = $pdo->prepare("INSERT INTO migrations (migration) VALUES (:name)");
+                            $stmtInsert->execute(['name' => $name]);
+                            $stmtInsert->closeCursor(); // Liberar cursor
+                        }
+                    }
                 }
 
-                // Ejecutar scripts SQL de estructura y carga
-                $pdo->exec($installSql);
+                // Cerrar y reabrir conexión antes de crear el administrador para garantizar un búfer limpio
+                $pdo = null;
+                $pdo = new PDO($dsn, $dbUser, $dbPass, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_TIMEOUT => 5,
+                    PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true
+                ]);
 
                 // 3. Crear el administrador
                 $passHash = password_hash($adminPass, PASSWORD_BCRYPT, ['cost' => 12]);
@@ -290,6 +343,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </form>
 
             <?php elseif ($step === 2): ?>
+                <?php
+                $postedSiteTitle = $_POST['site_title'] ?? '';
+                $postedAdminName = $_POST['admin_name'] ?? '';
+                $postedAdminUser = $_POST['admin_user'] ?? '';
+                $postedAdminEmail = $_POST['admin_email'] ?? '';
+                ?>
                 <form action="?step=2" method="POST" class="space-y-6">
                     <div class="space-y-1">
                         <h2 class="heading-font text-lg font-bold text-white">Paso 2: Configuración del Sitio</h2>
@@ -299,42 +358,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="space-y-4">
                         <div class="space-y-2">
                             <label for="site_title" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Título del Blog</label>
-                            <input type="text" id="site_title" name="site_title" required value="Blog de Pablo" placeholder="Ej. Mi Blog Técnico"
+                            <input type="text" id="site_title" name="site_title" required value="<?php echo htmlspecialchars($postedSiteTitle); ?>" placeholder="Ej. Blog de Pablo"
                                    class="w-full px-4 py-3 bg-slate-900/60 border border-slate-800 focus:border-violet-500 rounded-2xl focus:outline-none transition-all text-sm text-white">
                         </div>
 
                         <div class="space-y-2">
                             <label for="admin_name" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Nombre Completo (Autor)</label>
-                            <input type="text" id="admin_name" name="admin_name" required value="Pablo Bautista" placeholder="Ej. Alex Morgan"
+                            <input type="text" id="admin_name" name="admin_name" required value="<?php echo htmlspecialchars($postedAdminName); ?>" placeholder="Ej. Pablo Bautista"
                                    class="w-full px-4 py-3 bg-slate-900/60 border border-slate-800 focus:border-violet-500 rounded-2xl focus:outline-none transition-all text-sm text-white">
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="space-y-2">
                                 <label for="admin_user" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Usuario Admin</label>
-                                <input type="text" id="admin_user" name="admin_user" required value="admin"
+                                <input type="text" id="admin_user" name="admin_user" required value="<?php echo htmlspecialchars($postedAdminUser); ?>" placeholder="Ej. admin"
                                        class="w-full px-4 py-3 bg-slate-900/60 border border-slate-800 focus:border-violet-500 rounded-2xl focus:outline-none transition-all text-sm text-white">
                             </div>
 
                             <div class="space-y-2">
                                 <label for="admin_email" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Email</label>
-                                <input type="email" id="admin_email" name="admin_email" required placeholder="admin@sitio.com"
+                                <input type="email" id="admin_email" name="admin_email" required value="<?php echo htmlspecialchars($postedAdminEmail); ?>" placeholder="Ej. admin@tudominio.com"
                                        class="w-full px-4 py-3 bg-slate-900/60 border border-slate-800 focus:border-violet-500 rounded-2xl focus:outline-none transition-all text-sm text-white">
                             </div>
                         </div>
 
                         <div class="space-y-2">
                             <label for="admin_pass" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Contraseña del Administrador</label>
-                            <input type="password" id="admin_pass" name="admin_pass" required placeholder="Crea una contraseña segura"
+                            <input type="password" id="admin_pass" name="admin_pass" required placeholder="Crea una contraseña segura para tu cuenta"
                                    class="w-full px-4 py-3 bg-slate-900/60 border border-slate-800 focus:border-violet-500 rounded-2xl focus:outline-none transition-all text-sm text-white">
-                        </div>
-
-                        <div class="flex items-center gap-3 pt-2">
-                            <input type="checkbox" id="install_demo" name="install_demo" value="1" checked
-                                   class="w-4 h-4 text-violet-600 bg-slate-900 border-slate-800 rounded focus:ring-violet-500 focus:ring-2">
-                            <label for="install_demo" class="text-xs font-medium text-slate-350 cursor-pointer">
-                                Instalar artículos y comentarios de prueba por defecto
-                            </label>
                         </div>
                     </div>
 
