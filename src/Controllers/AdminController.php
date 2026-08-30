@@ -1441,7 +1441,7 @@ class AdminController {
                     $repoDir = $subdirs[0];
 
                     // Copiar archivos
-                    $appRoot = dirname(__DIR__);
+                    $appRoot = dirname(dirname(__DIR__));
                     $this->copyFolder($repoDir, $appRoot);
 
                     // Ejecutar migraciones SQL
@@ -1652,6 +1652,9 @@ class AdminController {
                     $this->copyFolder($src . '/' . $file, $dst . '/' . $file);
                 } else {
                     if ($file === 'database.php' && basename(dirname($src . '/' . $file)) === 'config') {
+                        continue;
+                    }
+                    if ($file === 'web-publisher.zip') {
                         continue;
                     }
                     copy($src . '/' . $file, $dst . '/' . $file);
