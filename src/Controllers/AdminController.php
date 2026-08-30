@@ -1473,30 +1473,30 @@ class AdminController {
 
     private function fetchLatestCommitSha(string $owner, string $repo, string $branch, string $token): ?string {
         $url = "https://api.github.com/repos/$owner/$repo/commits/$branch";
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => [
-                    'User-Agent: Web-Publisher-App',
-                    'Accept: application/vnd.github.v3+json'
-                ]
-            ],
-            'ssl' => [
-                'verify_peer' => false,
-                'verify_peer_name' => false,
-            ]
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Web-Publisher-App');
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        
+        $headers = [
+            'Accept: application/vnd.github.v3+json'
         ];
         if (!empty($token)) {
-            $opts['http']['header'][] = "Authorization: token $token";
+            $headers[] = "Authorization: token $token";
         }
-        $context = stream_context_create($opts);
-        try {
-            $response = @file_get_contents($url, false, $context);
-            if ($response !== false) {
-                $data = json_decode($response, true);
-                return $data['sha'] ?? null;
-            }
-        } catch (\Exception $e) {}
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        $response = curl_exec($ch);
+        curl_close($ch);
+        
+        if ($response !== false) {
+            $data = json_decode($response, true);
+            return $data['sha'] ?? null;
+        }
         return null;
     }
 
